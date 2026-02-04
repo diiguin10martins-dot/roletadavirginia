@@ -1,0 +1,4208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Roleta Carnaval</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Roleta Carnaval">
+    <meta property="og:description" content="">
+    <meta property="og:image" content="">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="Roleta Milhionaria">
+    <meta property="twitter:description" content="">
+    <meta property="twitter:image" content="">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/notiflix@3.2.8/dist/notiflix-aio-3.2.8.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/notiflix@3.2.8/src/notiflix.min.css" rel="stylesheet">
+
+
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: sans-serif;
+            background-color: #000;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            z-index: -1;
+            background-image: url('assets/img/fundo.png');
+            background-size: cover;
+            background-position: center;
+            filter: blur(8px);
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+            background-image: url('assets/img/fundo.png');
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #roulette-indicator {
+            width: 100%;
+            height: auto;
+            margin-top: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        #roulette-wheel {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transform-origin: center center;
+            width: 88%;
+            height: auto;
+            z-index: 1;
+            will-change: transform;
+        }
+
+        #bonus-wheel {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transform-origin: center center;
+            width: 35%;
+            height: auto;
+            z-index: 3;
+            will-change: transform;
+        }
+
+        #roulette-wheel.swaying,
+        #roleta1-labels.swaying {
+            animation: sway-roleta1 8s ease-in-out infinite;
+        }
+
+        #bonus-wheel.swaying,
+        #roleta2-labels.swaying {
+            animation: sway-roleta2 8s ease-in-out infinite;
+        }
+
+        #bonus-indicator {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8%;
+            height: auto;
+            z-index: 4;
+        }
+
+        #bottom-bar {
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            width: 100%;
+            height: auto;
+            z-index: 2;
+        }
+
+        .ui-panel {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 5px 15px;
+            color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            text-align: left;
+            z-index: 3;
+            box-sizing: border-box;
+        }
+
+        .ui-panel .label {
+            font-size: clamp(0.7rem, 2.5vw, 0.8rem);
+            margin: 0;
+            padding: 0;
+            opacity: 0.9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ui-panel .value {
+            font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+            font-weight: bold;
+            color: #FFD700;
+            margin: 0;
+            padding: 0;
+            white-space: nowrap;
+        }
+
+        #saldo-block {
+            bottom: 11%;
+            left: 5%;
+            width: 25%;
+            min-width: 90px;
+        }
+
+        #ganho-block {
+            bottom: 2%;
+            left: 5%;
+            width: 25%;
+            min-width: 90px;
+        }
+
+        .ui-button {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            color: #000000;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            z-index: 3;
+            box-sizing: border-box;
+        }
+
+        .ui-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        #normal-button {
+            bottom: 20%;
+            left: 5%;
+            width: 25%;
+            min-width: 90px;
+            padding: 8px 0;
+            font-size: clamp(0.7rem, 2.8vw, 0.9rem);
+            color: #FFFFFF !important;
+        }
+
+        #plus-button,
+        #minus-button {
+            color: #FFD700 !important;
+        }
+
+        #deposit-button {
+            position: absolute;
+            bottom: 28%;
+            left: 5%;
+            width: 25%;
+            min-width: 90px;
+            padding: 12px 0;
+            font-size: clamp(0.75rem, 2.8vw, 0.95rem);
+            background: linear-gradient(135deg, #000000, #1a1a1a);
+            border: 2px solid #000000;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 4;
+            box-sizing: border-box;
+            animation: depositPulse 2s ease-in-out infinite;
+            transition: all 0.3s ease;
+        }
+
+        #deposit-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.8);
+            background: linear-gradient(135deg, #1a1a1a, #000000);
+        }
+
+        #deposit-button:active {
+            transform: translateY(-1px);
+        }
+
+        @keyframes depositPulse {
+            0%,
+            100% {
+                box-shadow: 0 4px 20px rgba(253, 131, 3, 0.6);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 6px 30px rgba(253, 131, 3, 0.9);
+                transform: scale(1.05);
+            }
+        }
+
+        #deposit-arrow {
+            position: absolute;
+            bottom: 34%;
+            left: 17%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            z-index: 5;
+            animation: arrowBounce 1.5s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes arrowBounce {
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+            50% {
+                transform: translateX(-50%) translateY(8px);
+            }
+        }
+
+        #deposit-arrow svg {
+            width: 100%;
+            height: 100%;
+            fill: #000000;
+            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
+        }
+
+        #giro-area {
+            position: absolute;
+            bottom: 5%;
+            right: 5%;
+            transform: none;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            z-index: 4;
+        }
+
+        #giro-area .ui-button {
+            position: static;
+            width: 56px;
+            height: 38px;
+            padding: 0;
+        }
+
+        #giro-area #giro-block {
+            position: relative;
+            width: auto;
+            min-width: 80px;
+            padding: 6px 10px;
+        }
+
+        #giro-block {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        #play-button {
+            position: absolute;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 25%;
+            min-width: 95px;
+            height: auto;
+            z-index: 5;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        #play-button.disabled {
+            cursor: not-allowed;
+            filter: grayscale(80%);
+        }
+
+        #play-button:active:not(.disabled) {
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        #modal-content {
+            position: relative;
+            width: 70%;
+            max-width: 300px;
+            background-color: rgba(42, 10, 1, 0.9);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            border: 2px solid #000000;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .modal-overlay.show #modal-content {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        #modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #000000;
+            margin: 0 0 5px 0;
+        }
+
+        #modal-ganho {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #fff;
+            margin: 0 0 10px 0;
+        }
+
+        #modal-details {
+            font-size: 0.8rem;
+            color: #ddd;
+            margin: 0;
+        }
+
+        #modal-button {
+            background-color: #000000;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 8px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.2s;
+            font-size: 0.9rem;
+        }
+
+        #modal-button:hover {
+            background-color: #1a1a1a;
+        }
+
+        .labels-container {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transform-origin: center center;
+            z-index: 5;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        #roleta1-labels {
+            width: 88%;
+            padding-bottom: 88%;
+        }
+
+        #roleta2-labels {
+            width: 35%;
+            padding-bottom: 35%;
+        }
+
+        .roulette-label {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            color: transparent;
+            background-color: transparent;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        #roleta1-labels .roulette-label {
+            padding: 2px 18px;
+        }
+
+        @keyframes sway-roleta1 {
+            0%,
+            100% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            25% {
+                transform: translate(-50%, -50%) rotate(20deg);
+            }
+            75% {
+                transform: translate(-50%, -50%) rotate(-20deg);
+            }
+        }
+
+        @keyframes sway-roleta2 {
+            0%,
+            100% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            25% {
+                transform: translate(-50%, -50%) rotate(-20deg);
+            }
+            75% {
+                transform: translate(-50%, -50%) rotate(20deg);
+            }
+        }
+
+        #top-right-icons {
+            position: absolute;
+            top: 20px;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 5;
+        }
+
+        .icon-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(0, 0, 0, 0.5);
+            color: #FFD700;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            padding: 0;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .icon-button svg {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+        }
+
+        #profile-modal-content {
+            width: 100%;
+            max-width: 420px;
+            height: auto;
+            border-radius: 16px;
+            position: relative;
+            background-color: rgba(15, 5, 2, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: white;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            border: none;
+        }
+
+        #profile-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 108, 47, 0.3);
+        }
+
+        #close-profile-button {
+            font-size: 2rem;
+            color: #000000;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        #username-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .profile-button {
+            width: 80%;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.5);
+            color: #FFD700;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .profile-button:hover {
+            background-color: rgba(120, 40, 15, 0.8);
+            color: #FFA500;
+        }
+
+        .auth-modal-content {
+            position: relative;
+            max-width: 350px;
+            width: 90%;
+            background-color: #2a2a2a;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #3a3a3a;
+            text-align: left;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .auth-modal-content::before {
+            content: '❄';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 16px;
+            opacity: 0.3;
+            animation: float 3s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        .auth-modal-content::after {
+            content: '⭐';
+            position: absolute;
+            top: 15px;
+            right: 50px;
+            font-size: 14px;
+            opacity: 0.3;
+            animation: twinkle 2s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-10px) rotate(180deg);
+            }
+        }
+
+        @keyframes twinkle {
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(1.2);
+            }
+        }
+
+        .christmas-decoration {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.2;
+            filter: blur(0.5px);
+        }
+
+        .christmas-decoration.top-left {
+            top: 8px;
+            left: 8px;
+            font-size: 16px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .christmas-decoration.top-right {
+            top: 8px;
+            right: 45px;
+            font-size: 14px;
+            animation: twinkle 2.5s ease-in-out infinite;
+        }
+
+        .christmas-decoration.bottom-left {
+            bottom: 8px;
+            left: 8px;
+            font-size: 12px;
+            animation: float 3.5s ease-in-out infinite;
+        }
+
+        .christmas-decoration.bottom-right {
+            bottom: 8px;
+            right: 8px;
+            font-size: 14px;
+            animation: twinkle 2s ease-in-out infinite;
+        }
+
+        .auth-modal-close {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        .auth-modal-close:hover {
+            color: #fff;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 1.2rem;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 4px;
+            gap: 4px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 10px 8px;
+            border-radius: 6px;
+            border: none;
+            background-color: #1a1a1a;
+            color: #FFD700;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+            font-size: 0.85rem;
+        }
+
+        .auth-tab.active {
+            background-color: #DC2626;
+            color: #FFFFFF;
+        }
+
+        .auth-tab:not(.active) {
+            background-color: #1a1a1a;
+            color: #FFD700;
+        }
+
+        .auth-tab:not(.active):hover {
+            background-color: #252525;
+            color: #FFD700;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .auth-form .form-group {
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-form .form-label {
+            display: block;
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 0.4rem;
+        }
+
+        .auth-form .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .auth-form .form-input {
+            width: 100%;
+            padding: 10px 10px 10px 35px;
+            background-color: #1f1f1f;
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+        }
+
+        .auth-form .form-input:focus {
+            outline: none;
+            border-color: #DC2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.3);
+        }
+
+        .auth-form .form-input::placeholder {
+            color: #666;
+        }
+
+        .auth-form .input-icon {
+            position: absolute;
+            left: 10px;
+            color: #888;
+            font-size: 1rem;
+            pointer-events: none;
+        }
+
+        .auth-form .form-group:focus-within .input-icon {
+            color: #DC2626;
+        }
+
+        .auth-form .form-helper {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 0.2rem;
+            margin-left: 0;
+        }
+
+        .auth-form .submit-btn {
+            background: linear-gradient(135deg, #DC2626, #B91C1C);
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            color: #FFFFFF;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 0.4rem;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+        }
+
+        .auth-form .submit-btn:hover {
+            background: linear-gradient(135deg, #B91C1C, #991B1B);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
+        }
+
+        .auth-form .form-footer {
+            font-size: 0.8rem;
+            color: #888;
+            text-align: center;
+            margin-top: 0.8rem;
+        }
+
+        .auth-form .form-footer a,
+        .auth-form .footer-link {
+            color: #DC2626;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .auth-form .form-footer a:hover,
+        .auth-form .footer-link:hover {
+            text-decoration: underline;
+            color: #B91C1C;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .password-toggle:hover {
+            color: #DC2626;
+        }
+
+        .password-toggle i {
+            pointer-events: none;
+        }
+
+        .auth-form-container {
+            display: none;
+        }
+
+        .auth-form-container.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .auth-modal-content {
+                max-width: 95%;
+                width: 95%;
+                padding: 1.5rem;
+                border-radius: 12px;
+            }
+            .auth-modal-close {
+                top: 10px;
+                right: 15px;
+                font-size: 1.5rem;
+            }
+            .auth-tabs {
+                margin-bottom: 1.2rem;
+                padding: 4px;
+                gap: 4px;
+            }
+            .auth-tab {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+            .auth-form {
+                gap: 1rem;
+            }
+            .auth-form .form-label {
+                font-size: 0.8rem;
+                margin-bottom: 0.4rem;
+            }
+            .auth-form .form-input {
+                padding: 10px 10px 10px 35px;
+                font-size: 16px;
+                border-radius: 6px;
+            }
+            .auth-form .input-icon {
+                left: 10px;
+                font-size: 1rem;
+            }
+            .auth-form .form-helper {
+                font-size: 0.7rem;
+                margin-top: 0.2rem;
+            }
+            .auth-form .submit-btn {
+                padding: 12px;
+                font-size: 0.9rem;
+                border-radius: 6px;
+            }
+            .auth-form .form-footer {
+                font-size: 0.8rem;
+                margin-top: 0.8rem;
+            }
+            .password-toggle {
+                right: 10px;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-modal-content {
+                max-width: 98%;
+                width: 98%;
+                padding: 1.2rem;
+                border-radius: 10px;
+            }
+            .auth-modal-close {
+                top: 8px;
+                right: 12px;
+                font-size: 1.3rem;
+            }
+            .auth-tabs {
+                margin-bottom: 1rem;
+                padding: 3px;
+                gap: 3px;
+            }
+            .auth-tab {
+                padding: 8px 6px;
+                font-size: 0.75rem;
+            }
+            .auth-form {
+                gap: 0.9rem;
+            }
+            .auth-form .form-label {
+                font-size: 0.75rem;
+                margin-bottom: 0.35rem;
+            }
+            .auth-form .form-input {
+                padding: 9px 9px 9px 32px;
+                font-size: 16px;
+                border-radius: 6px;
+            }
+            .auth-form .input-icon {
+                left: 9px;
+                font-size: 0.95rem;
+            }
+            .auth-form .form-helper {
+                font-size: 0.65rem;
+                margin-top: 0.15rem;
+            }
+            .auth-form .submit-btn {
+                padding: 11px;
+                font-size: 0.85rem;
+                border-radius: 6px;
+            }
+            .auth-form .form-footer {
+                font-size: 0.75rem;
+                margin-top: 0.7rem;
+            }
+            .password-toggle {
+                right: 9px;
+                font-size: 0.95rem;
+            }
+        }
+
+        /* Central de Ajuda */
+
+        .icon-button.help-button {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        #help-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #help-modal-overlay.show {
+            display: flex;
+        }
+
+        #help-modal-content {
+            background: #1a1a1a;
+            border-radius: 8px;
+            max-width: 300px;
+            width: 100%;
+            max-height: 75vh;
+            overflow-y: auto;
+            position: relative;
+            border: 1px solid #333;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        #help-modal-content::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        #help-modal-content::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        #help-modal-content::-webkit-scrollbar-thumb {
+            background: #000000;
+            border-radius: 4px;
+        }
+
+        .help-header {
+            background: linear-gradient(135deg, #000000, #1a1a1a);
+            padding: 6px 10px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #FFD700;
+        }
+
+        .help-header h2 {
+            color: #FFD700;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .help-close {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #FFD700;
+            color: #FFD700;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .help-close:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: scale(1.1);
+        }
+
+        .help-tabs {
+            display: flex;
+            gap: 3px;
+            padding: 4px 8px;
+            background: #0f0f0f;
+            border-bottom: 1px solid #333;
+            flex-wrap: wrap;
+        }
+
+        .help-tab {
+            padding: 3px 6px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 3px;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 8px;
+        }
+
+        .help-tab:hover {
+            background: #252525;
+            color: #fff;
+        }
+
+        .help-tab.active {
+            background: linear-gradient(135deg, #000000, #1a1a1a);
+            border-color: #FFD700;
+            color: #FFD700;
+        }
+
+        .help-content {
+            padding: 8px 10px;
+            color: #fff;
+        }
+
+        .help-section {
+            display: none;
+        }
+
+        .help-section.active {
+            display: block;
+        }
+
+        .help-section h3 {
+            color: #FFD700;
+            font-size: 11px;
+            margin-top: 0;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .help-section h4 {
+            color: #FFD700;
+            font-size: 9px;
+            margin-top: 10px;
+            margin-bottom: 4px;
+        }
+
+        .help-section p {
+            color: #ccc;
+            line-height: 1.3;
+            margin-bottom: 6px;
+            font-size: 8px;
+        }
+
+        .help-section ul {
+            color: #ccc;
+            line-height: 1.4;
+            margin-bottom: 10px;
+            padding-left: 14px;
+            font-size: 8px;
+        }
+
+        .help-section li {
+            margin-bottom: 3px;
+        }
+
+        .help-section strong {
+            color: #FFD700;
+            font-size: 8px;
+        }
+
+        .help-section code {
+            background: #0f0f0f;
+            padding: 1px 3px;
+            border-radius: 2px;
+            color: #FFD700;
+            font-family: monospace;
+            font-size: 7px;
+        }
+
+        @media (max-width: 768px) {
+            #help-modal-overlay {
+                padding: 10px;
+            }
+            #help-modal-content {
+                max-width: 100%;
+                max-height: 95vh;
+                border-radius: 12px;
+            }
+            .help-header {
+                padding: 15px 20px;
+                border-radius: 12px 12px 0 0;
+            }
+            .help-header h2 {
+                font-size: 18px;
+            }
+            .help-close {
+                width: 32px;
+                height: 32px;
+                font-size: 20px;
+            }
+            .help-tabs {
+                padding: 8px 12px;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .help-tab {
+                padding: 6px 12px;
+                font-size: 11px;
+                flex: 1 1 calc(50% - 3px);
+                min-width: calc(50% - 3px);
+            }
+            .help-content {
+                padding: 15px 12px;
+            }
+            .help-section h3 {
+                font-size: 16px;
+                margin-bottom: 12px;
+            }
+            .help-section h4 {
+                font-size: 14px;
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+            .help-section p {
+                font-size: 13px;
+                line-height: 1.5;
+                margin-bottom: 12px;
+            }
+            .help-section ul {
+                font-size: 13px;
+                line-height: 1.6;
+                margin-bottom: 15px;
+                padding-left: 20px;
+            }
+            .help-section li {
+                margin-bottom: 6px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #help-modal-overlay {
+                padding: 5px;
+            }
+            #help-modal-content {
+                max-height: 98vh;
+                border-radius: 10px;
+            }
+            .help-header {
+                padding: 12px 15px;
+            }
+            .help-header h2 {
+                font-size: 16px;
+            }
+            .help-close {
+                width: 28px;
+                height: 28px;
+                font-size: 18px;
+            }
+            .help-tabs {
+                padding: 6px 10px;
+                gap: 4px;
+            }
+            .help-tab {
+                padding: 5px 8px;
+                font-size: 10px;
+                flex: 1 1 calc(50% - 2px);
+                min-width: calc(50% - 2px);
+            }
+            .help-content {
+                padding: 12px 10px;
+            }
+            .help-section h3 {
+                font-size: 15px;
+                margin-bottom: 10px;
+            }
+            .help-section h4 {
+                font-size: 13px;
+                margin-top: 15px;
+                margin-bottom: 8px;
+            }
+            .help-section p {
+                font-size: 12px;
+                line-height: 1.4;
+                margin-bottom: 10px;
+            }
+            .help-section ul {
+                font-size: 12px;
+                line-height: 1.5;
+                margin-bottom: 12px;
+                padding-left: 18px;
+            }
+            .help-section li {
+                margin-bottom: 5px;
+            }
+        }
+
+        #notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #000000;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            z-index: 1001;
+            display: none;
+            font-weight: bold;
+        }
+
+        #notification.error {
+            background-color: #1a1a1a;
+        }
+
+        /* Notificações de Saque em Tempo Real */
+
+        .withdraw-notification {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #000000, #1a1a1a);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            z-index: 10000;
+            max-width: 220px;
+            animation: slideInLeft 0.4s ease-out, fadeOut 0.5s ease-in 4.5s;
+            opacity: 1;
+            transform: translateX(0);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+        }
+
+        .withdraw-notification.hide {
+            animation: slideOutLeft 0.4s ease-in forwards;
+        }
+
+        .withdraw-notification-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.9);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+        }
+
+        .withdraw-notification-icon {
+            width: 12px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            flex-shrink: 0;
+        }
+
+        .withdraw-notification-content {
+            font-size: 0.75rem;
+            line-height: 1.3;
+        }
+
+        .withdraw-notification-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.7rem;
+        }
+
+        .withdraw-notification-amount {
+            font-weight: 700;
+            color: #fde047;
+            font-size: 0.85rem;
+            margin-top: 2px;
+            display: block;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-300px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutLeft {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(-300px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0.7;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .withdraw-notification {
+                top: 10px;
+                left: 10px;
+                max-width: 180px;
+                padding: 6px 10px;
+                font-size: 0.7rem;
+            }
+            .withdraw-notification-header {
+                font-size: 0.6rem;
+            }
+            .withdraw-notification-content {
+                font-size: 0.7rem;
+            }
+            .withdraw-notification-name {
+                font-size: 0.65rem;
+            }
+            .withdraw-notification-amount {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="notification"></div>
+    <div id="withdraw-notifications-container"></div>
+    <audio id="background-music" loop autoplay>
+        <source src="/assets/sounds/carnaval2.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="game-container">
+        <div id="top-right-icons">
+            <button id="sound-button" class="icon-button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </button>
+            <button id="help-button" class="icon-button help-button">?</button>
+            <button id="profile-button" class="icon-button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </button>
+        </div>
+
+        <img id="roulette-indicator" src="assets/img/cima2.png" alt="Indicador da roleta">
+        <img id="roulette-wheel" class="swaying" src="assets/img/roleta200.png" alt="Roleta 1">
+        <div id="roleta1-labels" class="labels-container swaying"></div>
+        <img id="bonus-wheel" class="swaying" src="assets/img/roleta11.png" alt="Roleta bônus">
+        <div id="roleta2-labels" class="labels-container swaying"></div>
+        <img id="bonus-indicator" src="assets/img/ceta.png" alt="Indicador de bônus">
+        <img id="bottom-bar" src="assets/img/baixo.png" alt="Barra inferior">
+
+        <button id="deposit-button">💰 Depositar</button>
+        <div id="deposit-arrow">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+            </svg>
+        </div>
+        <button id="normal-button" class="ui-button">⚡ NORMAL</button>
+
+        <div id="saldo-block" class="ui-panel">
+            <p class="label">Saldo</p>
+            <p id="saldo-value" class="value">R$ 0,00</p>
+        </div>
+        <div id="ganho-block" class="ui-panel">
+            <p class="label">Ganho</p>
+            <p id="ganho-value" class="value">-</p>
+        </div>
+
+        <img id="play-button" src="assets/img/cadastro111.png" alt="Botão de jogar/cadastrar">
+
+        <div id="giro-area">
+            <button id="plus-button" class="ui-button">+</button>
+            <div id="giro-block" class="ui-panel">
+                <p class="label">Giro</p>
+                <p id="giro-value" class="value">R$ 0,50</p>
+            </div>
+            <button id="minus-button" class="ui-button">-</button>
+        </div>
+
+        <div id="modal-ganhos-overlay" class="modal-overlay">
+            <div id="modal-content">
+                <h2 id="modal-title">Parabéns!</h2>
+                <p id="modal-ganho">Você ganhou R$ 50,00</p>
+                <p id="modal-details">10x multiplicado por 2x</p>
+                <button id="modal-button">Continuar</button>
+            </div>
+        </div>
+
+        <div id="profile-modal-overlay" class="modal-overlay">
+            <div id="profile-modal-content">
+                <div id="profile-header">
+                    <span id="username-display"></span>
+                    <button id="close-profile-button">&times;</button>
+                </div>
+                <button id="open-withdraw-button" class="profile-button">Sacar</button>
+                <button id="open-deposit-button" class="profile-button">Depositar</button>
+                <button id="open-history-button" class="profile-button">Histórico</button>
+                <button id="open-affiliate-button" class="profile-button">Afiliado</button>
+                <button id="open-affiliate-history-button" class="profile-button">Histórico de Afiliado</button>
+                <button id="logout-button" class="profile-button">Sair</button>
+            </div>
+        </div>
+
+        <div id="auth-modal-overlay" class="modal-overlay">
+            <div class="auth-modal-content">
+                <span class="christmas-decoration top-left">🎄</span>
+                <span class="christmas-decoration top-right">⭐</span>
+                <span class="christmas-decoration bottom-left">❄</span>
+                <span class="christmas-decoration bottom-right">🎁</span>
+                <button class="auth-modal-close">&times;</button>
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="register">Criar Conta</button>
+                    <button class="auth-tab" data-tab="login">Entrar</button>
+                </div>
+                <div id="register-form-container" class="auth-form-container active">
+                    <form id="register-form" class="auth-form">
+                        <input name="ref" type="hidden" value="">
+                        <div class="form-group">
+                            <label class="form-label">Nome Completo</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-person input-icon"></i>
+                                <input type="text" name="nome_completo" class="form-input" placeholder="Digite seu nome completo" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-envelope input-icon"></i>
+                                <input type="email" name="email" class="form-input" placeholder="Digite seu email" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Telefone</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-telephone input-icon"></i>
+                                <input type="tel" name="telefone" class="form-input" placeholder="(11) 99999-9999" required>
+                            </div>
+                            <p class="form-helper">Formato: (11) 99999-9999 para celular ou (11) 3333-3333 para fixo</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Senha</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-lock input-icon"></i>
+                                <input type="password" name="senha" class="form-input" placeholder="Crie uma senha (mín. 6 caracteres)" required minlength="6">
+                                <button type="button" class="password-toggle"><i class="bi bi-eye"></i></button>
+                            </div>
+                            <p class="form-helper">A senha deve conter pelo menos 6 caracteres.</p>
+                        </div>
+                        <button type="submit" class="submit-btn">Criar Conta</button>
+                        <p class="form-footer">Já tem uma conta? <a href="#" class="footer-link" id="switch-to-login">Entrar</a></p>
+                    </form>
+                </div>
+                <div id="login-form-container" class="auth-form-container">
+                    <form id="login-form" class="auth-form">
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-envelope input-icon"></i>
+                                <input type="email" name="email" class="form-input" placeholder="Digite seu email" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Senha</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-lock input-icon"></i>
+                                <input type="password" name="senha" class="form-input" placeholder="Digite sua senha" required>
+                                <button type="button" class="password-toggle"><i class="bi bi-eye"></i></button>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn">Entrar</button>
+                        <p class="form-footer">Esqueceu sua senha? <a href="#">Recuperar</a></p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Central de Ajuda -->
+    <div id="help-modal-overlay">
+        <div id="help-modal-content">
+            <div class="help-header">
+                <h2>📚 Central de Ajuda</h2>
+                <button class="help-close">&times;</button>
+            </div>
+            <div class="help-tabs">
+                <button class="help-tab active" data-tab="jogar">Como Jogar</button>
+                <button class="help-tab" data-tab="deposito">Depósito</button>
+                <button class="help-tab" data-tab="saque">Saque</button>
+                <button class="help-tab" data-tab="afiliados">Afiliados</button>
+            </div>
+            <div class="help-content">
+                <!-- Seção Como Jogar -->
+                <div class="help-section active" id="help-jogar">
+                    <h3>🎯 Como Funciona o Jogo</h3>
+                    <p>Bem-vindo ao nosso jogo de roleta! Teste sua sorte e ganhe prêmios incríveis.</p>
+
+                    <h4>🎮 Passo a Passo</h4>
+                    <ul>
+                        <li><strong>1. Escolha sua aposta:</strong> Use os botões <strong>+</strong> e <strong>-</strong> para definir o valor do giro</li>
+                        <li><strong>2. Clique em START:</strong> Pressione o botão central para girar as roletas</li>
+                        <li><strong>3. Aguarde o resultado:</strong> As roletas vão girar e parar em posições aleatórias</li>
+                        <li><strong>4. Receba seu prêmio:</strong> Se ganhar, o valor será creditado automaticamente no seu saldo</li>
+                    </ul>
+
+                    <h4>🎰 Sistema de Roletas</h4>
+                    <p><strong>Roleta Principal (Externa):</strong> Define o valor base do seu prêmio. Pode variar de 0x até 100x sua aposta!</p>
+                    <p><strong>Roleta Bônus (Interna):</strong> Multiplica o valor da roleta principal por 1x, 2x, 3x ou 4x!</p>
+
+                    <h4>💎 Cálculo de Prêmios</h4>
+                    <p><strong>Prêmio Final =</strong></p>
+                    <p>Aposta × Roleta Principal × Multiplicador Bônus</p>
+                    <p><strong>Exemplo:</strong> R$ 1,00 × 50x × 3x = R$ 150,00</p>
+
+                    <h4>💡 Dicas Importantes</h4>
+                    <ul>
+                        <li>Quanto maior a aposta, maiores os prêmios potenciais</li>
+                        <li>Gerencie seu saldo com responsabilidade</li>
+                        <li>Não há padrões ou horários "quentes" - cada giro é aleatório</li>
+                        <li>Defina limites e jogue por diversão</li>
+                    </ul>
+
+                    <h4>⚡ Modo de Jogo</h4>
+                    <p><strong>Modo Flash:</strong> Giros rápidos de 3 segundos para mais emoção e agilidade!</p>
+                </div>
+
+                <!-- Seção Depósito -->
+                <div class="help-section" id="help-deposito">
+                    <h3>💳 Como Fazer um Depósito</h3>
+                    <p>Adicione saldo à sua conta de forma rápida e segura. Siga os passos abaixo:</p>
+
+                    <h4>📝 Passo a Passo</h4>
+                    <ul>
+                        <li><strong>1. Clique no botão "Depositar":</strong> Localizado no canto superior direito</li>
+                        <li><strong>2. Escolha o valor:</strong> Selecione ou digite o valor que deseja depositar</li>
+                        <li><strong>3. Método de pagamento:</strong> Escolha entre PIX, cartão de crédito ou outros métodos disponíveis</li>
+                        <li><strong>4. Confirme os dados:</strong> Revise o valor e método escolhido</li>
+                        <li><strong>5. Realize o pagamento:</strong> Siga as instruções na tela (QR Code para PIX, dados do cartão, etc.)</li>
+                        <li><strong>6. Aguarde a confirmação:</strong> O saldo é creditado automaticamente após aprovação</li>
+                    </ul>
+
+                    <h4>⚡ Métodos de Pagamento</h4>
+                    <p><strong>💰 PIX</strong> - Instantâneo • Disponível 24/7 • Sem taxas</p>
+                    <p><strong>💳 Cartão de Crédito</strong> - Aprovação imediata • Parcele em até 3x</p>
+                    <p><strong>🏦 Transferência</strong> - Depósitos maiores • Confirmação em até 2h úteis</p>
+
+                    <h4>⏱️ Tempo de Processamento</h4>
+                    <ul>
+                        <li><strong>PIX:</strong> Imediato (até 5 minutos)</li>
+                    </ul>
+
+                    <h4>🔒 Segurança</h4>
+                    <p>Todos os pagamentos são processados através de gateways certificados e criptografados. Seus dados financeiros estão 100% protegidos.</p>
+
+                    <h4>💡 Dicas</h4>
+                    <ul>
+                        <li>Guarde o comprovante até a confirmação do depósito</li>
+                        <li>Valores mínimos podem variar conforme o método</li>
+                        <li>Em caso de dúvidas, entre em contato com o suporte</li>
+                        <li>Não compartilhe códigos PIX com terceiros</li>
+                    </ul>
+                </div>
+
+                <!-- Seção Saque -->
+                <div class="help-section" id="help-saque">
+                    <h3>💰 Como Sacar seus Ganhos</h3>
+                    <p>Resgate seus ganhos de forma simples e segura. Confira o passo a passo:</p>
+
+                    <h4>📝 Passo a Passo</h4>
+                    <ul>
+                        <li><strong>1. Acesse seu perfil:</strong> Clique no ícone de perfil no canto superior direito</li>
+                        <li><strong>2. Clique em "Sacar":</strong> Ou use o botão de saque no menu</li>
+                        <li><strong>3. Informe o valor:</strong> Digite quanto deseja sacar (respeitando o mínimo)</li>
+                        <li><strong>4. Escolha o método:</strong> Selecione PIX, transferência ou outro método disponível</li>
+                        <li><strong>5. Informe os dados:</strong> CPF, chave PIX ou dados bancários</li>
+                        <li><strong>6. Confirme a solicitação:</strong> Revise todos os dados antes de confirmar</li>
+                        <li><strong>7. Aguarde o processamento:</strong> O prazo varia conforme o método escolhido</li>
+                    </ul>
+
+                    <h4>⚙️ Requisitos para Saque</h4>
+                    <ul>
+                        <li><strong>Valor mínimo:</strong> R$ 20,00</li>
+                        <li><strong>Conta verificada:</strong> Documentos aprovados</li>
+                        <li><strong>Chave PIX cadastrada:</strong> CPF, e-mail ou telefone</li>
+                        <li><strong>Mesmo titular:</strong> Conta deve estar no seu nome</li>
+                    </ul>
+
+                    <h4>⏱️ Tempo de Processamento</h4>
+                    <ul>
+                        <li><strong>PIX:</strong> Até 30 minutos (em horário comercial)</li>
+                        <li><strong>Transferência Bancária:</strong> 1 a 2 dias úteis</li>
+                        <li><strong>Finais de semana:</strong> Processamento na segunda-feira</li>
+                    </ul>
+
+                    <h4>📋 Políticas de Saque</h4>
+                    <ul>
+                        <li>Solicitações são processadas de segunda a sexta, 9h às 18h</li>
+                        <li>Você pode ter até 3 solicitações pendentes simultaneamente</li>
+                        <li>Verificação de identidade pode ser solicitada</li>
+                        <li>Taxa de saque: Consulte a tabela no momento da solicitação</li>
+                    </ul>
+
+                    <h4>⚠️ Atenção</h4>
+                    <p><strong>Importante:</strong> Certifique-se de que seus dados bancários estão corretos. Transferências para contas de terceiros não são permitidas por questões de segurança.</p>
+
+                    <h4>💡 Dicas</h4>
+                    <ul>
+                        <li>Cadastre sua chave PIX com antecedência</li>
+                        <li>Verifique o status do saque no histórico</li>
+                        <li>Guarde o comprovante de cada transação</li>
+                        <li>Entre em contato com suporte em caso de atraso</li>
+                    </ul>
+                </div>
+
+                <!-- Seção Afiliados -->
+                <div class="help-section" id="help-afiliados">
+                    <h3>🤝 Programa de Afiliados</h3>
+                    <p>Ganhe comissões indicando amigos! Quanto mais pessoas jogarem através do seu link, mais você ganha.</p>
+
+                    <h4>🚀 Como Funciona</h4>
+                    <ul>
+                        <li><strong>1. Acesse o menu Afiliados:</strong> No seu perfil, clique em "Afiliados"</li>
+                        <li><strong>2. Copie seu link:</strong> Cada usuário tem um link exclusivo de indicação</li>
+                        <li><strong>3. Compartilhe:</strong> Envie para amigos, redes sociais, WhatsApp, etc.</li>
+                        <li><strong>4. Ganhe comissões:</strong> Receba uma porcentagem dos depósitos e jogadas</li>
+                    </ul>
+
+                    <h4>💰 Tipos de Comissão</h4>
+                    <h4>🎯 CPA (Custo por Aquisição)</h4>
+                    <p>Ganhe um <strong>valor fixo</strong> por cada novo usuário que se cadastrar através do seu link e realizar o primeiro depósito.</p>
+                    <p><strong>Exemplo:</strong> R$ 10,00 por cada indicado que depositar</p>
+
+                    <h4>📊 RevShare (Revenue Share)</h4>
+                    <p>Ganhe uma <strong>porcentagem recorrente</strong> sobre os depósitos dos seus indicados enquanto eles jogarem.</p>
+                    <p><strong>Exemplo:</strong> 5% de cada depósito realizado pelo indicado</p>
+
+                    <h4>📈 Níveis de Afiliado</h4>
+                    <p><strong>🥉 Iniciante</strong> - 0-10 indicados ativos - Comissão: 3% RevShare</p>
+                    <p><strong>🥈 Intermediário</strong> - 11-50 indicados ativos - Comissão: 5% RevShare</p>
+                    <p><strong>🥇 Avançado</strong> - 51-100 indicados ativos - Comissão: 7% RevShare</p>
+                    <p><strong>💎 Master</strong> - 100+ indicados ativos - Comissão: 10% RevShare</p>
+
+                    <h4>📊 Acompanhamento</h4>
+                    <p>No painel de afiliados você pode visualizar:</p>
+                    <ul>
+                        <li><strong>Total de indicados:</strong> Quantas pessoas usaram seu link</li>
+                        <li><strong>Indicados ativos:</strong> Quantos realizaram depósito</li>
+                        <li><strong>Ganhos totais:</strong> Quanto você já ganhou com comissões</li>
+                        <li><strong>Histórico detalhado:</strong> Veja cada transação que gerou comissão</li>
+                    </ul>
+
+                    <h4>💳 Recebendo suas Comissões</h4>
+                    <ul>
+                        <li>As comissões são creditadas automaticamente no seu saldo</li>
+                        <li>Você pode sacar suas comissões a qualquer momento</li>
+                        <li>Não há valor mínimo diferenciado para saque de comissões</li>
+                        <li>Histórico completo disponível na aba Afiliados</li>
+                    </ul>
+
+                    <h4>💡 Dicas para Sucesso</h4>
+                    <ul>
+                        <li>Compartilhe em grupos e comunidades relevantes</li>
+                        <li>Explique as vantagens da plataforma aos seus indicados</li>
+                        <li>Use redes sociais para ampliar seu alcance</li>
+                        <li>Crie conteúdo sobre o jogo (vídeos, tutoriais, etc.)</li>
+                        <li>Quanto mais indicados ativos, maior sua comissão!</li>
+                    </ul>
+
+                    <h4>⚠️ Regras do Programa</h4>
+                    <ul>
+                        <li>Proibido criar múltiplas contas para autoindicação</li>
+                        <li>Não utilize métodos de spam ou práticas abusivas</li>
+                        <li>Comissões de atividades fraudulentas serão canceladas</li>
+                        <li>A plataforma se reserva o direito de suspender afiliados que violarem as regras</li>
+                    </ul>
+
+                    <h4>🎁 Bônus Especiais</h4>
+                    <p>Fique atento a campanhas especiais onde você pode ganhar bônus extras por metas atingidas, como comissões dobradas em determinados períodos!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <style>
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 1200;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .modal-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            z-index: 1250;
+            overflow-y: auto;
+            padding-top: 20vh !important;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .modal-container.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-wrapper {
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            margin-top: 50px;
+        }
+
+        .modal-card {
+            background-color: #1a1a1a;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #333;
+            width: 100%;
+            background-image: none;
+        }
+
+        .deposit-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 215, 0, 0.5);
+            border-radius: 50%;
+            color: #FFD700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 20px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            font-weight: bold;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #FFD700;
+        }
+
+        .deposit-header-img {
+            position: relative;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 2;
+            pointer-events: none;
+            border-radius: 16px 16px 0 0;
+            display: block;
+            height: auto;
+            margin: 0;
+            padding: 0;
+            vertical-align: top;
+        }
+
+        .modal-body {
+            padding: 20px 25px 25px;
+            position: relative;
+            transition: min-height 0.2s ease-in-out;
+            margin-top: 0;
+        }
+
+        .form-title {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .deposit-title {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .amount-input,
+        .text-input {
+            width: 100%;
+            padding: 16px;
+            background: #1f1f1f;
+            border: 1px solid #3a3a3a;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .amount-input:focus,
+        .text-input:focus {
+            outline: none;
+            border-color: #9D4EDD;
+            box-shadow: 0 0 0 3px rgba(157, 78, 221, 0.3);
+        }
+
+        .deposit-form .amount-input {
+            border: 1px solid #9D4EDD;
+            font-weight: 600;
+        }
+
+        .deposit-form .amount-input:focus {
+            border-color: #9D4EDD;
+            box-shadow: 0 0 0 3px rgba(157, 78, 221, 0.3);
+        }
+
+        .min-value-notice {
+            display: block;
+            color: #888;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+            width: 100%;
+        }
+
+        .value-btn {
+            background: #1f1f1f;
+            border: 1px solid #3a3a3a;
+            color: #ffffff;
+            padding: 12px 8px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            white-space: nowrap;
+            text-align: center;
+            flex: 1 1 0;
+            min-width: 60px;
+        }
+
+        .value-btn:hover {
+            background: #2a2a2a;
+            border-color: #444;
+        }
+
+        .value-btn.quente,
+        .value-btn.selected {
+            background: #1f1f1f;
+            border: 1px solid #3a3a3a;
+            color: #ffffff;
+        }
+
+        .quente-tag {
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #FFD700;
+            color: #000;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 8px;
+            white-space: nowrap;
+            z-index: 1;
+        }
+
+        .chances-tag {
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #FFD700;
+            color: #000;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 8px;
+            white-space: nowrap;
+            z-index: 1;
+        }
+
+        .generate-btn {
+            width: 100%;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .deposit-form .generate-btn {
+            background: #22c55e;
+            color: #FFFFFF;
+            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .deposit-form .generate-btn:hover {
+            background: #16a34a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(34, 197, 94, 0.4);
+        }
+
+        .deposit-form .generate-btn i {
+            font-size: 18px;
+        }
+
+        .secure-payment-bar {
+            background: #22c55e;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            margin-top: 10px;
+        }
+
+        .secure-payment-bar i {
+            font-size: 16px;
+        }
+
+        .withdraw-form .generate-btn {
+            background: linear-gradient(135deg, #00C851, #00CED1);
+            color: white;
+            margin-top: 16px;
+            box-shadow: 0 4px 20px rgba(0, 200, 81, 0.5);
+        }
+
+        .withdraw-form .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 30px rgba(0, 200, 81, 0.6);
+            background: linear-gradient(135deg, #00CED1, #00C851);
+        }
+
+        .pix-input-container {
+            display: flex;
+            gap: 12px;
+        }
+
+        .pix-selector {
+            width: 100px;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 12px;
+            color: white;
+            padding: 16px 8px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .pix-input {
+            flex: 1;
+            padding: 16px 20px;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+        }
+
+        .pix-selector:focus,
+        .pix-input:focus {
+            outline: none;
+            border-color: #1E3A8A;
+            background: #333333;
+        }
+
+        .dual-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .qr-section {
+            text-align: center;
+            display: none;
+        }
+
+        .qr-section.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            height: 100%;
+        }
+
+        .qr-title {
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 0;
+        }
+
+        .qr-description {
+            color: #888888;
+            margin-bottom: 0;
+            font-size: 14px;
+        }
+
+        .qr-image-wrapper {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            margin: 0;
+        }
+
+        .qr-image {
+            width: 100%;
+            height: 100%;
+            background: white;
+            padding: 2px;
+            border-radius: 16px;
+        }
+
+        .qr-paid-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(34, 197, 94, 0.9);
+            border-radius: 16px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            z-index: 10;
+        }
+
+        .qr-paid-overlay.active {
+            display: flex;
+        }
+
+        .qr-code-container {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            max-width: 280px;
+        }
+
+        .qr-input {
+            flex: 1;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            color: white;
+        }
+
+        .copy-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .input-group.compact {
+            margin-bottom: 12px;
+        }
+
+        .rollover-notice {
+            display: none;
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #ef4444;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: center;
+            margin-top: -5px;
+            margin-bottom: 15px;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(16, 16, 18, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loading-overlay .spinner {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #dc2626;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .modal-container {
+                padding-top: 5vh !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .modal-container {
+                padding-top: 2vh !important;
+            }
+        }
+    </style>
+
+    <div id="backdrop2" class="modal-backdrop"></div>
+
+    <section id="depositModal" class="modal-container">
+        <div class="modal-wrapper">
+            <div class="modal-card deposit-card">
+                <img src="/assets/img/modal.png" alt="Banner" class="deposit-header-img">
+                <button id="closeDepositModal" class="modal-close"><i class="bi bi-x"></i></button>
+                <div class="modal-body">
+                    <form id="depositForm" class="deposit-form">
+                        <h2 class="deposit-title">Digite ou selecione o valor</h2>
+                        <div class="input-group">
+                            <input type="text" name="amount" id="amountInput" required class="amount-input" placeholder="R$ 0,00" inputmode="numeric">
+                            <small class="min-value-notice">O valor mínimo é R$ 20,00</small>
+                        </div>
+                        <div class="secure-payment-bar">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Método de pagamento seguro</span>
+                        </div>
+                        <div class="values-grid"></div>
+                        <input type="hidden" name="cpf" value="731.607.790-50">
+                        <input type="hidden" id="aceitarPromocao" name="aceitarPromocao" value="1">
+                        <button type="submit" class="generate-btn"><i class="bi bi-check-circle-fill"></i> Gerar PIX</button>
+                    </form>
+                    <div id="qrArea" class="qr-section">
+                        <h3 class="qr-title">PIX gerado com sucesso!</h3>
+                        <p class="qr-description">Escaneie o QR Code ou use o código Pix Copia e Cola</p>
+                        <div class="qr-image-wrapper">
+                            <img id="qrImg" src="" alt="QR Code" class="qr-image">
+                            <div id="qrPaidOverlay" class="qr-paid-overlay">PAGO ✅</div>
+                        </div>
+                        <div class="qr-code-container">
+                            <input id="qrCodeValue" type="text" readonly class="qr-input" value="">
+                            <button id="copyQr" class="copy-btn"><i class="bi bi-clipboard"></i> Copiar</button>
+                        </div>
+                    </div>
+                    <div id="depositLoadingOverlay" class="loading-overlay">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="withdrawModal" class="modal-container">
+        <div class="modal-wrapper">
+            <img src="https://www.roletadragon.com/apps/roletadragon.com/deposit.jpg" alt="Banner" class="deposit-header-img">
+            <div class="modal-card withdraw-card">
+                <button id="closeWithdrawModal" class="modal-close"><i class="bi bi-x"></i></button>
+                <div class="modal-body">
+                    <form id="withdrawForm" class="withdraw-form">
+                        <div class="input-group compact">
+                            <label class="input-label">Valor do saque</label>
+                            <input type="text" name="amount" id="withdrawAmount" required class="amount-input" placeholder="R$ 0,00" inputmode="numeric">
+                            <small class="max-balance">Seu Saldo: R$ 0,00</small>
+                        </div>
+                        <div id="withdrawRolloverNotice" class="rollover-notice">
+                            Você ainda precisa apostar <strong id="withdrawRolloverAmount">R$ 0,00</strong>.
+                        </div>
+                        <div class="input-group compact">
+                            <label class="input-label">Chave PIX</label>
+                            <div class="pix-input-container">
+                                <select name="pixKeyType" id="pixKeyType" required class="pix-selector compact-select">
+                                <option value="CPF" selected>CPF</option>
+                                <option value="EMAIL">Email</option>
+                                <option value="TELEFONE">Telefone</option>
+                                <option value="EVP">Aleatória</option>
+                            </select>
+                                <input type="text" name="pixKey" id="pixKey" required class="pix-input compact-input" placeholder="000.000.000-00">
+                            </div>
+                        </div>
+                        <div class="dual-inputs compact">
+                            <div class="input-group half-width">
+                                <label class="input-label">Nome</label>
+                                <input type="text" name="nome" id="withdrawNome" required class="text-input compact-input" placeholder="Nome completo">
+                            </div>
+                            <div class="input-group half-width">
+                                <label class="input-label">CPF</label>
+                                <input type="text" name="cpf" id="withdrawCpf" required class="text-input compact-input" placeholder="000.000.000-00" maxlength="14">
+                            </div>
+                        </div>
+                        <button type="submit" class="generate-btn compact-submit"><i class="bi bi-arrow-right-circle"></i> Solicitar Saque</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const DEPOSITO_MIN = 20;
+            const BONUS_PERCENT = 10;
+            const depositValueButtons = [{
+                    value: 25,
+                    label: 'R$ 25,00'
+                },
+                {
+                    value: 50,
+                    label: 'R$ 50,00',
+                    tag: 'QUENTE',
+                    icon: '🔥'
+                },
+                {
+                    value: 100,
+                    label: 'R$ 100,00',
+                    tag: 'Recomendado'
+                },
+                {
+                    value: 200,
+                    label: 'R$ 200,00',
+                    tag: '+Chances'
+                },
+                {
+                    value: 250,
+                    label: 'R$ 250,00',
+                    tag: '+Chances'
+                },
+                {
+                    value: 500,
+                    label: 'R$ 500,00',
+                    tag: '+Chances'
+                }
+            ];
+            const grid = document.querySelector('#depositModal .values-grid');
+            let paymentCheckInterval = null;
+
+            if (grid) {
+                grid.style.display = 'grid';
+                grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                grid.style.gap = '10px';
+                grid.innerHTML = depositValueButtons.map((btn) => {
+                    let tag = '';
+                    let label = btn.label;
+
+                    if (btn.tag === '+Chances') {
+                        tag = '<span class="chances-tag">+Chances</span>';
+                    } else if (btn.tag) {
+                        tag = `<span class="quente-tag">${btn.icon ? btn.icon + ' ' : ''}${btn.tag}</span>`;
+                    }
+
+                    return `<button type="button" data-value="${btn.value}" class="value-btn">${tag}${label}</button>`;
+                }).join('');
+            }
+
+            function openModal(modalId) {
+                const modal = document.getElementById(modalId);
+                const backdrop = document.getElementById('backdrop2');
+                if (!modal || !backdrop) return;
+                modal.offsetHeight;
+                requestAnimationFrame(() => {
+                    modal.classList.add('active');
+                    backdrop.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
+            }
+
+            function closeModal(modalId) {
+                const modal = document.getElementById(modalId);
+                const backdrop = document.getElementById('backdrop2');
+                if (!modal || !backdrop) return;
+                modal.classList.remove('active');
+                if (!document.querySelector('.modal-container.active')) {
+                    backdrop.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+                if (modalId === 'depositModal') {
+                    clearInterval(paymentCheckInterval);
+                    const form = document.getElementById('depositForm');
+                    const qrArea = document.getElementById('qrArea');
+                    const paidOverlay = document.getElementById('qrPaidOverlay');
+                    const loadingOverlay = document.getElementById('depositLoadingOverlay');
+                    const modalBody = document.querySelector('#depositModal .modal-body');
+
+                    if (modalBody) {
+                        modalBody.style.minHeight = '';
+                    }
+                    if (form) form.style.display = 'block';
+                    if (loadingOverlay) loadingOverlay.classList.remove('active');
+                    if (qrArea) qrArea.classList.remove('active');
+                    if (paidOverlay) paidOverlay.classList.remove('active');
+                }
+            }
+
+            window.openDepositModal = function() {
+                openModal('depositModal');
+            };
+            window.closeDepositModal = () => closeModal('depositModal');
+
+            window.openWithdrawModal = async function(balance) {
+                const noticeEl = document.getElementById('withdrawRolloverNotice');
+                const noticeAmountEl = document.getElementById('withdrawRolloverAmount');
+                noticeEl.style.display = 'none';
+                openModal('withdrawModal');
+                const balanceEl = document.querySelector('#withdrawModal .max-balance');
+                if (balanceEl) {
+                    balanceEl.textContent = `Seu Saldo: R$ ${parseFloat(balance).toFixed(2).replace('.', ',')}`;
+                }
+                try {
+                    const response = await fetch('/api/check_rollover.php');
+                    const data = await response.json();
+                    if (data.success && data.rollover_restante > 0) {
+                        noticeAmountEl.textContent = `R$ ${data.rollover_restante.toFixed(2).replace('.', ',')}`;
+                        noticeEl.style.display = 'block';
+                    }
+                } catch (err) {}
+            };
+            window.closeWithdrawModal = () => closeModal('withdrawModal');
+
+            document.getElementById('closeDepositModal') ? .addEventListener('click', () => closeModal('depositModal'));
+            document.getElementById('closeWithdrawModal') ? .addEventListener('click', () => closeModal('withdrawModal'));
+
+            document.getElementById('backdrop2') ? .addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal('depositModal');
+                    closeModal('withdrawModal');
+                }
+            });
+
+            document.querySelectorAll('.value-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const val = parseFloat(btn.dataset.value);
+                    const form = btn.closest('form');
+                    const input = form.querySelector('.amount-input');
+                    if (input) {
+                        input.value = val.toFixed(2).replace('.', ',');
+                    }
+                    const container = btn.closest('.values-grid');
+                    if (container) {
+                        container.querySelectorAll('.value-btn').forEach(b => b.classList.remove('selected'));
+                        btn.classList.add('selected');
+                    }
+                });
+            });
+
+            function startPaymentPolling(transactionId) {
+                clearInterval(paymentCheckInterval);
+                paymentCheckInterval = setInterval(async () => {
+                    try {
+                        const response = await fetch(`/api/check_payment_status.php?transactionId=${transactionId}`);
+                        const data = await response.json();
+                        if (data.status === 'PAID') {
+                            clearInterval(paymentCheckInterval);
+                            document.getElementById('qrPaidOverlay').classList.add('active');
+                            if (typeof Notiflix !== 'undefined') {
+                                Notiflix.Notify.success('Depósito confirmado com sucesso!');
+                            }
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 2500);
+                        }
+                    } catch (error) {
+                        clearInterval(paymentCheckInterval);
+                    }
+                }, 3000);
+            }
+
+            document.getElementById('depositForm') ? .addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const amountInput = document.getElementById('amountInput');
+                const value = parseFloat(amountInput.value.replace(/[^\d,]/g, '').replace(',', '.'));
+                if (isNaN(value) || value < DEPOSITO_MIN) {
+                    if (typeof Notiflix !== 'undefined') {
+                        Notiflix.Notify.failure(`O valor mínimo para depósito é R$ ${DEPOSITO_MIN.toFixed(2).replace('.', ',')}`);
+                    }
+                    return;
+                }
+                const form = e.target;
+                const modalBody = form.closest('.modal-body');
+                const formHeight = form.offsetHeight;
+                if (modalBody) {
+                    modalBody.style.minHeight = `${formHeight}px`;
+                }
+
+                const loadingOverlay = document.getElementById('depositLoadingOverlay');
+                form.style.display = 'none';
+                loadingOverlay.classList.add('active');
+
+                const formData = new FormData(form);
+                formData.append('tipo_deposito', 'normal');
+                try {
+                    const res = await fetch('/api/payment.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (!res.ok) throw new Error('Falha na resposta da rede');
+                    const data = await res.json();
+                    const paymentUrl = data.paymentUrl || data.url || (data.data && data.data.url);
+                    if (paymentUrl) {
+                        if (typeof Notiflix !== 'undefined') {
+                            Notiflix.Notify.info('Abrindo link de pagamento...');
+                        }
+                        const newTab = window.open(paymentUrl, '_blank');
+                        if (!newTab) {
+                            window.location.href = paymentUrl;
+                        }
+                        closeModal('depositModal');
+                        return;
+                    }
+
+                    if (typeof Notiflix !== 'undefined') {
+                        Notiflix.Notify.failure(data.error || 'Erro ao gerar link de pagamento.');
+                    }
+                    form.style.display = 'block';
+                } catch (err) {
+                    if (typeof Notiflix !== 'undefined') {
+                        Notiflix.Notify.failure('Erro de comunicação com o servidor.');
+                    }
+                    form.style.display = 'block';
+                } finally {
+                    loadingOverlay.classList.remove('active');
+                }
+            });
+
+            document.getElementById('withdrawForm') ? .addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (typeof Notiflix !== 'undefined') Notiflix.Loading.standard('Processando...');
+                try {
+                    const rolloverCheck = await fetch('/api/check_rollover.php');
+                    const rolloverData = await rolloverCheck.json();
+                    if (!rolloverData.success) {
+                        throw new Error(rolloverData.error || 'Erro ao verificar status.');
+                    }
+                    if (rolloverData.rollover_restante > 0) {
+                        const modal = document.querySelector('#withdrawModal .modal-card');
+                        modal.classList.add('shake');
+                        setTimeout(() => modal.classList.remove('shake'), 500);
+                        if (typeof Notiflix !== 'undefined') Notiflix.Loading.remove();
+                        return;
+                    }
+                    const formData = new FormData(e.target);
+                    const data = Object.fromEntries(formData.entries());
+                    const response = await fetch('/api/withdraw.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        if (typeof Notiflix !== 'undefined') Notiflix.Notify.success(result.message);
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        if (typeof Notiflix !== 'undefined') Notiflix.Notify.failure(result.message || 'Erro desconhecido.');
+                    }
+                } catch (error) {
+                    if (typeof Notiflix !== 'undefined') Notiflix.Notify.failure(error.message || 'Erro de conexão.');
+                } finally {
+                    if (typeof Notiflix !== 'undefined') Notiflix.Loading.remove();
+                }
+            });
+
+            document.getElementById('copyQr') ? .addEventListener('click', function() {
+                const qrCodeInput = document.getElementById('qrCodeValue');
+                const copyButton = this;
+                const originalButtonHTML = copyButton.innerHTML;
+
+                if (!qrCodeInput || !qrCodeInput.value) return;
+
+                navigator.clipboard.writeText(qrCodeInput.value).then(() => {
+                    copyButton.innerHTML = '<i class="bi bi-check-lg"></i> Copiado!';
+                    if (typeof Notiflix !== 'undefined') {
+                        Notiflix.Notify.success('Código PIX copiado com sucesso!');
+                    }
+                    setTimeout(() => {
+                        copyButton.innerHTML = originalButtonHTML;
+                    }, 2500);
+                }).catch(err => {
+                    if (typeof Notiflix !== 'undefined') {
+                        Notiflix.Notify.failure('Não foi possível copiar o código. Tente manualmente.');
+                    }
+                });
+            });
+        });
+    </script>
+    <style>
+        .history-modal-content {
+            position: relative;
+            max-width: 420px;
+            /* Mantém o tamanho mobile */
+            width: 90%;
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid #333;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh;
+            /* Limita a altura para caber na tela */
+        }
+
+        .history-modal-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 108, 47, 0.3);
+            margin-bottom: 15px;
+        }
+
+        .history-modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffc83d;
+        }
+
+        .history-modal-close {
+            font-size: 2rem;
+            color: #ff9d2f;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        #history-list {
+            overflow-y: auto;
+            /* Adiciona scroll se o conteúdo for grande */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 10px;
+            /* Espaço para o scrollbar */
+        }
+
+        .history-item {
+            background-color: #2c2c2c;
+            border-radius: 8px;
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 5px 15px;
+            text-align: left;
+            border-left: 4px solid #ef4444;
+        }
+
+        .history-item.loss {
+            border-left-color: #e53e3e;
+        }
+
+        .history-item p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .history-item .label {
+            color: #aaa;
+            font-size: 0.8rem;
+        }
+
+        .history-item .value {
+            font-weight: bold;
+        }
+
+        .history-item .result-win {
+            color: #48bb78;
+            /* Verde */
+        }
+
+        .history-item .result-loss {
+            color: #e53e3e;
+            /* Vermelho */
+        }
+
+        .history-item .timestamp {
+            grid-column: 1 / -1;
+            /* Ocupa a linha inteira */
+            color: #888;
+            font-size: 0.75rem;
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        #no-history-message {
+            color: #888;
+            padding: 40px 0;
+        }
+    </style>
+
+    <div id="history-modal-overlay" class="modal-overlay">
+        <div class="history-modal-content">
+            <div class="history-modal-header">
+                <h2 class="history-modal-title">Histórico de Jogos</h2>
+                <button id="close-history-button" class="history-modal-close">&times;</button>
+            </div>
+            <div id="history-list">
+            </div>
+        </div>
+    </div>
+    <style>
+        .affiliate-modal-content {
+            position: relative;
+            max-width: 420px;
+            width: 90%;
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid #333;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh;
+        }
+
+        .affiliate-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 108, 47, 0.3);
+            margin-bottom: 15px;
+        }
+
+        .affiliate-modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffc83d;
+        }
+
+        .affiliate-modal-close {
+            font-size: 2rem;
+            color: #ff9d2f;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .affiliate-section {
+            background-color: #252525;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e5e7eb;
+            margin: 0 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .link-container {
+            display: flex;
+            background-color: #2c2c2c;
+            border: 1px solid #444;
+            border-radius: 8px;
+        }
+
+        #affiliate-link-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: #ddd;
+            padding: 10px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        #copy-link-btn {
+            background-color: #ef4444;
+            border: none;
+            color: white;
+            padding: 0 15px;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .stats-grid-affiliate {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            text-align: center;
+        }
+
+        .stat-item-affiliate .value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #ffc83d;
+        }
+
+        .stat-item-affiliate .label {
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        .commission-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .commission-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #2c2c2c;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+        .commission-item .label {
+            color: #ddd;
+        }
+
+        .commission-item .value {
+            font-weight: bold;
+            color: #ef4444;
+            font-size: 1.1rem;
+        }
+
+        #affiliate-history-list {
+            overflow-y: auto;
+            max-height: 200px;
+            /* Altura máxima para a lista de histórico */
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 5px;
+        }
+
+        .history-item-affiliate {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            background-color: #2c2c2c;
+            padding: 10px;
+            border-radius: 6px;
+            align-items: center;
+            text-align: center;
+        }
+
+        .history-item-affiliate p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .history-item-affiliate .label {
+            font-size: 0.75rem;
+            color: #aaa;
+        }
+
+        .history-item-affiliate .value {
+            font-weight: 600;
+        }
+
+        .history-item-affiliate .user-id .value {
+            color: #e5e7eb;
+        }
+
+        .history-item-affiliate .deposit .value {
+            color: #ffc83d;
+        }
+
+        .history-item-affiliate .commission .value {
+            color: #48bb78;
+        }
+
+        #depositos-trazidos-list {
+            scrollbar-width: thin;
+            scrollbar-color: #444 #2c2c2c;
+        }
+
+        #depositos-trazidos-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #depositos-trazidos-list::-webkit-scrollbar-track {
+            background: #2c2c2c;
+            border-radius: 3px;
+        }
+
+        #depositos-trazidos-list::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 3px;
+        }
+
+        #depositos-trazidos-list::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+
+    <div id="affiliate-modal-overlay" class="modal-overlay">
+        <div class="affiliate-modal-content">
+            <div class="affiliate-modal-header">
+                <h2 class="affiliate-modal-title">Painel de Afiliado</h2>
+                <button id="close-affiliate-button" class="affiliate-modal-close">&times;</button>
+            </div>
+
+            <div id="affiliate-modal-body">
+                <div class="affiliate-section">
+                    <h3 class="section-title"><i data-lucide="link"></i> Seu Link de Convite</h3>
+                    <div class="link-container">
+                        <input type="text" id="affiliate-link-input" readonly>
+                        <button id="copy-link-btn">Copiar</button>
+                    </div>
+                </div>
+
+                <div class="affiliate-section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h3 class="section-title" style="margin: 0;"><i data-lucide="bar-chart-2"></i> Suas Estatísticas</h3>
+                        <div style="display: flex; align-items: center; gap: 5px; font-size: 0.75rem; color: #aaa;">
+                            <i data-lucide="percent" style="width: 14px; height: 14px;"></i>
+                            <span>Comissão: <strong id="comissao-percentual" style="color: #48bb78; font-size: 0.85rem;">0%</strong></span>
+                        </div>
+                    </div>
+                    <div class="stats-grid-affiliate">
+                        <div class="stat-item-affiliate">
+                            <p id="stats-convidados" class="value">0</p>
+                            <p class="label">Convidados</p>
+                        </div>
+                        <div class="stat-item-affiliate">
+                            <p id="stats-depositantes" class="value">0</p>
+                            <p class="label">Depositantes</p>
+                        </div>
+                        <div class="stat-item-affiliate">
+                            <p id="stats-ganhos" class="value">R$ 0,00</p>
+                            <p class="label">Ganhos</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="affiliate-section" style="text-align: center;">
+                    <button id="ver-depositos-btn" style="background: #ef4444; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; font-weight: 600; width: 100%;">
+                    <i data-lucide="list" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 8px;"></i>
+                    Ver Depósitos Trazidos
+                </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Histórico Completo de Depósitos -->
+    <div id="depositos-completo-modal-overlay" class="modal-overlay" style="display: none;">
+        <div class="affiliate-modal-content" style="max-width: 700px; max-height: 90vh;">
+            <div class="affiliate-modal-header">
+                <h2 class="affiliate-modal-title"><i data-lucide="list"></i> Histórico de Afiliado</h2>
+                <button id="close-depositos-completo-button" class="affiliate-modal-close">&times;</button>
+            </div>
+
+            <!-- Estatísticas do Histórico -->
+            <div class="affiliate-section" style="margin-bottom: 15px;">
+                <div class="stats-grid-affiliate" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="stat-item-affiliate">
+                        <p id="hist-total-depositos" class="value">0</p>
+                        <p class="label">Total de Depósitos</p>
+                    </div>
+                    <div class="stat-item-affiliate">
+                        <p id="hist-total-recebido" class="value" style="color: #48bb78;">R$ 0,00</p>
+                        <p class="label">Total Recebido</p>
+                    </div>
+                    <div class="stat-item-affiliate">
+                        <p id="hist-saldo-disponivel" class="value" style="color: #ffc83d;">R$ 0,00</p>
+                        <p class="label">Saldo Disponível</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="overflow-y: auto; max-height: calc(90vh - 250px); padding: 10px;">
+                <div id="depositos-completo-list" style="display: flex; flex-direction: column; gap: 10px;">
+                    <p style="text-align: center; color: #aaa; padding: 20px;">Carregando...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #depositos-completo-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #depositos-completo-modal-overlay.show {
+            display: flex !important;
+        }
+
+        .deposito-completo-item {
+            background-color: #2c2c2c;
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 3px solid #48bb78;
+        }
+
+        .deposito-completo-item .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .deposito-completo-item .indicado-info {
+            flex: 1;
+        }
+
+        .deposito-completo-item .indicado-nome {
+            font-weight: 600;
+            color: #e5e7eb;
+            font-size: 0.95rem;
+            margin-bottom: 3px;
+        }
+
+        .deposito-completo-item .indicado-telefone {
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        .deposito-completo-item .data {
+            font-size: 0.75rem;
+            color: #888;
+            text-align: right;
+        }
+
+        .deposito-completo-item .valores {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #333;
+        }
+
+        .deposito-completo-item .valor-item {
+            text-align: center;
+        }
+
+        .deposito-completo-item .valor-label {
+            font-size: 0.7rem;
+            color: #aaa;
+            margin-bottom: 3px;
+        }
+
+        .deposito-completo-item .valor-deposito {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffc83d;
+        }
+
+        .deposito-completo-item .valor-ganho {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #48bb78;
+        }
+    </style>
+    <script>
+        // Verifica imediatamente se há um registro recente (antes do DOMContentLoaded)
+        const shouldOpenDeposit = sessionStorage.getItem('justRegistered') === 'true' && false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const state = {
+                isLoggedIn: false,
+                saldo: 0,
+                isAdmin: false,
+                aposta: 0.50,
+                apostaStep: 0.50,
+                isNormal: true,
+                isSpinning: false,
+                isMuted: false,
+                currentRotation1: 0,
+                currentRotation2: 0,
+                roleta1Map: [0, 5, 15, 2, 20, 100, 10, 50],
+                roleta2Map: [2, 3, 4, 1]
+            };
+
+            // Inicializar música de fundo
+            const backgroundMusic = document.getElementById('background-music');
+            let musicStarted = false;
+
+            if (backgroundMusic) {
+                backgroundMusic.volume = 0.5; // Volume padrão (50%)
+
+                // Função para iniciar a música
+                const startMusic = () => {
+                    if (!musicStarted && !state.isMuted) {
+                        const playPromise = backgroundMusic.play();
+                        if (playPromise !== undefined) {
+                            playPromise.then(() => {
+                                musicStarted = true;
+                            }).catch(error => {
+                                console.log('Erro ao tocar música:', error);
+                            });
+                        }
+                    }
+                };
+
+                // Tentar tocar automaticamente (pode ser bloqueado pelo navegador)
+                startMusic();
+
+                // Se o autoplay foi bloqueado, tocar na primeira interação do usuário
+                document.addEventListener('click', () => {
+                    if (!musicStarted && !state.isMuted) {
+                        startMusic();
+                    }
+                }, {
+                    once: true
+                });
+
+                document.addEventListener('touchstart', () => {
+                    if (!musicStarted && !state.isMuted) {
+                        startMusic();
+                    }
+                }, {
+                    once: true
+                });
+            }
+
+            const DOMElements = {
+                playButton: document.getElementById('play-button'),
+                plusButton: document.getElementById('plus-button'),
+                minusButton: document.getElementById('minus-button'),
+                saldoValue: document.getElementById('saldo-value'),
+                ganhoValue: document.getElementById('ganho-value'),
+                giroValue: document.getElementById('giro-value'),
+                roleta1: document.getElementById('roulette-wheel'),
+                roleta1Labels: document.getElementById('roleta1-labels'),
+                roleta2: document.getElementById('bonus-wheel'),
+                roleta2Labels: document.getElementById('roleta2-labels'),
+                modalGanhosOverlay: document.getElementById('modal-ganhos-overlay'),
+                modalTitle: document.getElementById('modal-title'),
+                modalGanho: document.getElementById('modal-ganho'),
+                modalDetails: document.getElementById('modal-details'),
+                modalButton: document.getElementById('modal-button'),
+                normalButton: document.getElementById('normal-button'),
+                depositButton: document.getElementById('deposit-button'),
+                authModalOverlay: document.getElementById('auth-modal-overlay'),
+                soundButton: document.getElementById('sound-button'),
+                profileButton: document.getElementById('profile-button'),
+                profileModalOverlay: document.getElementById('profile-modal-overlay'),
+                closeProfileButton: document.getElementById('close-profile-button'),
+                logoutButton: document.getElementById('logout-button'),
+                notification: document.getElementById('notification'),
+                registerForm: document.getElementById('register-form'),
+                loginForm: document.getElementById('login-form'),
+                openWithdrawButton: document.getElementById('open-withdraw-button'),
+                openDepositButton: document.getElementById('open-deposit-button'),
+                openHistoryButton: document.getElementById('open-history-button'),
+                historyModalOverlay: document.getElementById('history-modal-overlay'),
+                closeHistoryButton: document.getElementById('close-history-button'),
+                historyList: document.getElementById('history-list'),
+                openAffiliateButton: document.getElementById('open-affiliate-button'),
+                affiliateModalOverlay: document.getElementById('affiliate-modal-overlay'),
+                closeAffiliateButton: document.getElementById('close-affiliate-button'),
+                copyLinkBtn: document.getElementById('copy-link-btn'),
+                affiliateLinkInput: document.getElementById('affiliate-link-input'),
+                openAffiliateHistoryButton: document.getElementById('open-affiliate-history-button'),
+                openAdminButton: document.getElementById('open-admin-button')
+            };
+
+            const formatCurrency = (value) => `R$ ${Number(value).toFixed(2).replace('.', ',')}`;
+
+            const showNotification = (message, isError = false) => {
+                DOMElements.notification.textContent = message;
+                DOMElements.notification.className = isError ? 'error' : '';
+                DOMElements.notification.style.display = 'block';
+                setTimeout(() => {
+                    DOMElements.notification.style.display = 'none';
+                }, 3000);
+            };
+
+            const updateDisplay = () => {
+                const oldSaldo = DOMElements.saldoValue.textContent;
+                const oldGiro = DOMElements.giroValue.textContent;
+
+                DOMElements.saldoValue.textContent = formatCurrency(state.saldo);
+                DOMElements.giroValue.textContent = formatCurrency(state.aposta);
+
+                // Adiciona animação se o valor mudou
+                if (oldSaldo !== DOMElements.saldoValue.textContent) {
+                    DOMElements.saldoValue.classList.add('updated');
+                    setTimeout(() => DOMElements.saldoValue.classList.remove('updated'), 500);
+                }
+
+                if (oldGiro !== DOMElements.giroValue.textContent) {
+                    DOMElements.giroValue.classList.add('updated');
+                    setTimeout(() => DOMElements.giroValue.classList.remove('updated'), 500);
+                }
+            };
+
+            const toggleSpinButtons = (enabled) => {
+                state.isSpinning = !enabled;
+                DOMElements.playButton.classList.toggle('disabled', !enabled);
+                const disableBetControls = !enabled || !state.isLoggedIn;
+                DOMElements.plusButton.disabled = disableBetControls;
+                DOMElements.minusButton.disabled = disableBetControls;
+            };
+
+            const showGanhosModal = (ganho, m1, m2) => {
+                if (ganho > 0) {
+                    DOMElements.modalTitle.textContent = 'Parabéns!';
+                    DOMElements.modalGanho.textContent = `Você ganhou ${formatCurrency(ganho)}`;
+                    DOMElements.modalDetails.textContent = `(${m1}x) multiplicado por (${m2}x)`;
+                } else {
+                    DOMElements.modalTitle.textContent = 'Não foi dessa vez!';
+                    DOMElements.modalGanho.textContent = 'Você não ganhou nada.';
+                    DOMElements.modalDetails.textContent = `Resultado: (${m1}x)`;
+                }
+                DOMElements.modalGanhosOverlay.classList.add('show');
+            };
+
+            const hideGanhosModalAndResume = async () => {
+                DOMElements.modalGanhosOverlay.classList.remove('show');
+                try {
+                    const response = await fetch('ajax/finish_spin.php', {
+                        method: 'POST'
+                    });
+                    const result = await response.json();
+                    if (result.success && typeof result.newBalance !== 'undefined') {
+                        state.saldo = result.newBalance;
+                        updateDisplay();
+                    } else {
+                        showNotification(result.message || 'Erro ao finalizar jogada.', true);
+                    }
+                } catch (error) {
+                    showNotification('Erro de conexão ao finalizar jogada.', true);
+                }
+                toggleSpinButtons(true);
+                DOMElements.roleta1.classList.add('swaying');
+                DOMElements.roleta1Labels.classList.add('swaying');
+                DOMElements.roleta2.classList.add('swaying');
+                DOMElements.roleta2Labels.classList.add('swaying');
+            };
+
+            const startSpinAnimation = (winningPos1, winningPos2, multiplicador1Exato = null, multiplicador2Exato = null) => {
+                [DOMElements.roleta1, DOMElements.roleta1Labels, DOMElements.roleta2, DOMElements.roleta2Labels].forEach(el => el.classList.remove('swaying'));
+                void DOMElements.roleta1.offsetWidth;
+
+                // Usa os multiplicadores exatos da resposta se disponíveis, senão usa do mapa
+                const multiplier1 = multiplicador1Exato !== null ? multiplicador1Exato : (state.roleta1Map[winningPos1] || 0);
+                const multiplier2 = multiplicador2Exato !== null ? multiplicador2Exato : (state.roleta2Map[winningPos2] || 1);
+
+                // A roleta pequena (roleta 2) multiplica o resultado da roleta grande (roleta 1)
+                // Ganho = (aposta * multiplicador_roleta1) * multiplicador_roleta2
+                const ganho = (state.aposta * multiplier1) * multiplier2;
+
+                const duration1 = state.isNormal ? 10 : 3;
+                const duration2 = duration1 + 2;
+                const easing = state.isNormal ? 'cubic-bezier(0.15, 0.8, 0.4, 1)' : 'cubic-bezier(0.25, 1, 0.5, 1)';
+
+                [DOMElements.roleta1, DOMElements.roleta1Labels].forEach(el => el.style.transition = `transform ${duration1}s ${easing}`);
+                [DOMElements.roleta2, DOMElements.roleta2Labels].forEach(el => el.style.transition = `transform ${duration2}s ${easing}`);
+
+                const numSegments1 = state.roleta1Map.length;
+                const segmentAngle1 = 360 / numSegments1;
+                // Calcular o ângulo para posicionar o segmento ganhador no topo (indicador)
+                // O indicador está no topo (0 graus), então precisamos rotacionar para que o segmento ganhador fique lá
+                const targetAngle1 = 360 - (winningPos1 * segmentAngle1) - (segmentAngle1 / 2);
+                // Adicionar rotações completas para efeito visual e garantir que pare no lugar certo
+                state.currentRotation1 = (Math.floor(state.currentRotation1 / 360) + 5) * 360 + targetAngle1;
+
+                const numSegments2 = state.roleta2Map.length;
+                const segmentAngle2 = 360 / numSegments2;
+                // Mesma lógica para a roleta 2
+                const targetAngle2 = 360 - (winningPos2 * segmentAngle2) - (segmentAngle2 / 2);
+                state.currentRotation2 = (Math.floor(state.currentRotation2 / 360) - 5) * 360 - targetAngle2;
+
+                DOMElements.roleta1.style.transform = `translate(-50%, -50%) rotate(${state.currentRotation1}deg)`;
+                DOMElements.roleta1Labels.style.transform = `translate(-50%, -50%) rotate(${state.currentRotation1}deg)`;
+                DOMElements.roleta2.style.transform = `translate(-50%, -50%) rotate(${state.currentRotation2}deg)`;
+                DOMElements.roleta2Labels.style.transform = `translate(-50%, -50%) rotate(${state.currentRotation2}deg)`;
+
+                setTimeout(() => {
+                    DOMElements.ganhoValue.textContent = formatCurrency(ganho > 0 ? ganho : 0);
+                    DOMElements.ganhoValue.classList.add('updated');
+                    setTimeout(() => DOMElements.ganhoValue.classList.remove('updated'), 500);
+                    showGanhosModal(ganho, multiplier1, multiplier2);
+                    [DOMElements.roleta1, DOMElements.roleta1Labels, DOMElements.roleta2, DOMElements.roleta2Labels].forEach(el => el.style.transition = '');
+                }, duration2 * 1000);
+            };
+
+            const handlePlay = async () => {
+                if (!state.isLoggedIn) {
+                    showAuthModal('register');
+                    return;
+                }
+                if (state.isSpinning) return;
+                if (state.saldo < state.aposta) {
+                    DOMElements.saldoValue.style.color = '#FFD700';
+                    DOMElements.saldoValue.classList.add('updated');
+                    setTimeout(() => {
+                        DOMElements.saldoValue.style.color = '';
+                        DOMElements.saldoValue.classList.remove('updated');
+                    }, 500);
+                    return;
+                }
+
+                toggleSpinButtons(false);
+                DOMElements.ganhoValue.textContent = '-';
+                DOMElements.ganhoValue.classList.remove('updated');
+                const formData = new FormData();
+                formData.append('aposta', state.aposta);
+
+                try {
+                    const response = await fetch('ajax/start_spin.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+
+                    if (!result.success) {
+                        showNotification(result.message, true);
+                        toggleSpinButtons(true);
+                        if (result.message === 'Saldo insuficiente.') {
+                            const saldoRes = await fetch('ajax/get_saldo.php');
+                            const saldoResult = await saldoRes.json();
+                            if (saldoResult.success) state.saldo = saldoResult.saldo;
+                        }
+                        updateDisplay();
+                        return;
+                    }
+
+                    state.saldo = result.newBalance;
+
+                    // Atualiza os mapas das roletas se vierem na resposta
+                    if (result.roleta1Map) {
+                        state.roleta1Map = result.roleta1Map;
+                    }
+                    if (result.roleta2Map) {
+                        state.roleta2Map = result.roleta2Map;
+                    }
+
+                    updateDisplay();
+                    // Passa também os multiplicadores exatos da resposta
+                    startSpinAnimation(result.posicao1, result.posicao2, result.multiplicador1, result.multiplicador2);
+                } catch (error) {
+                    showNotification('Erro de conexão. Tente novamente.', true);
+                    toggleSpinButtons(true);
+                }
+            };
+
+            const createLabels = (containerId, numSegments, radiusPercent) => {
+                const container = document.getElementById(containerId);
+                const angleStep = 360 / numSegments;
+                const isRoleta1 = containerId === 'roleta1-labels';
+                const multiplierMap = isRoleta1 ? state.roleta1Map : state.roleta2Map;
+
+                for (let i = 0; i < numSegments; i++) {
+                    const label = document.createElement('div');
+                    label.className = 'roulette-label';
+                    const multiplier = multiplierMap[i] || 0;
+                    label.textContent = multiplier > 0 ? `${multiplier}X` : '0X';
+                    const angle = (i * angleStep) + (angleStep / 2) - 90;
+                    const angleRad = angle * (Math.PI / 180);
+                    const x = 50 + radiusPercent * Math.cos(angleRad);
+                    const y = 50 + radiusPercent * Math.sin(angleRad);
+                    label.style.left = `${x}%`;
+                    label.style.top = `${y}%`;
+                    label.style.transform = `translate(-50%, -50%) rotate(${angle + 90}deg)`;
+                    container.appendChild(label);
+                }
+            };
+
+            const showAuthModal = (defaultTab = 'login') => {
+                const tabs = DOMElements.authModalOverlay.querySelectorAll('.auth-tab');
+                const forms = DOMElements.authModalOverlay.querySelectorAll('.auth-form-container');
+                tabs.forEach(t => t.classList.remove('active'));
+                forms.forEach(f => f.classList.remove('active'));
+
+                DOMElements.authModalOverlay.querySelector(`.auth-tab[data-tab="${defaultTab}"]`).classList.add('active');
+                document.getElementById(`${defaultTab}-form-container`).classList.add('active');
+                DOMElements.authModalOverlay.classList.add('show');
+            };
+
+            const handleAuthFormSubmit = async (e, action) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                formData.append('action', action);
+                try {
+                    const response = await fetch('', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        if (action === 'register') {
+                            // Se deve abrir depósito, marca flag
+                            if (result.openDeposit) {
+                                sessionStorage.setItem('justRegistered', 'true');
+                                sessionStorage.setItem('openDeposit', 'true');
+                            }
+                        }
+                        window.location.reload();
+                    } else {
+                        showNotification(result.message, true);
+                    }
+                } catch (error) {
+                    showNotification('Erro de conexão. Tente novamente.', true);
+                }
+            };
+
+            const openHistoryModal = async () => {
+                DOMElements.profileModalOverlay.classList.remove('show');
+                DOMElements.historyModalOverlay.classList.add('show');
+                DOMElements.historyList.innerHTML = '<p id="loading-history">Carregando histórico...</p>';
+                try {
+                    const response = await fetch('ajax/get_history.php');
+                    const result = await response.json();
+                    DOMElements.historyList.innerHTML = '';
+                    if (result.success && result.history.length > 0) {
+                        result.history.forEach(item => {
+                            const resultado = parseFloat(item.resultado);
+                            const isLoss = resultado < 0;
+                            const itemHTML = `
+                            <div class="history-item ${isLoss ? 'loss' : ''}">
+                                <p class="label">Aposta</p>
+                                <p class="value">${formatCurrency(item.valor_aposta)}</p>
+                                <p class="label">Resultado</p>
+                                <p class="value ${isLoss ? 'result-loss' : 'result-win'}">${resultado >= 0 ? '+' : ''}${formatCurrency(resultado)}</p>
+                                <p class="timestamp">${item.data_jogo_formatada}</p>
+                            </div>`;
+                            DOMElements.historyList.insertAdjacentHTML('beforeend', itemHTML);
+                        });
+                    } else {
+                        DOMElements.historyList.innerHTML = '<p id="no-history-message">Nenhum jogo encontrado no seu histórico.</p>';
+                    }
+                } catch (error) {
+                    DOMElements.historyList.innerHTML = '<p id="no-history-message" class="result-loss">Erro ao carregar o histórico.</p>';
+                }
+            };
+
+            const openAffiliateModal = async () => {
+                DOMElements.profileModalOverlay.classList.remove('show');
+                DOMElements.affiliateModalOverlay.classList.add('show');
+
+                document.getElementById('stats-convidados').textContent = '...';
+                document.getElementById('stats-depositantes').textContent = '...';
+                document.getElementById('stats-ganhos').textContent = '...';
+
+                try {
+                    const response = await fetch('ajax/get_affiliate_data.php');
+                    const data = await response.json();
+                    if (!data.success) throw new Error(data.message);
+
+                    // Salvar dados globalmente para uso no modal de histórico
+                    window.affiliateData = data;
+
+                    DOMElements.affiliateLinkInput.value = data.link;
+                    document.getElementById('stats-convidados').textContent = data.stats.convidados;
+                    document.getElementById('stats-depositantes').textContent = data.stats.depositantes;
+                    document.getElementById('stats-ganhos').textContent = formatCurrency(data.stats.ganhos);
+
+                    // Mostrar porcentagem de comissão
+                    const comissaoPercentualEl = document.getElementById('comissao-percentual');
+                    if (comissaoPercentualEl) {
+                        comissaoPercentualEl.textContent = parseFloat(data.comissao_percentual || 0).toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        }) + '%';
+                    }
+
+                } catch (error) {
+                    showNotification('Erro ao carregar dados de afiliado.', true);
+                    DOMElements.affiliateModalOverlay.classList.remove('show');
+                }
+            };
+
+            // Central de Ajuda
+            const helpButton = document.getElementById('help-button');
+            const helpModalOverlay = document.getElementById('help-modal-overlay');
+            const helpClose = document.querySelector('.help-close');
+            const helpTabs = document.querySelectorAll('.help-tab');
+            const helpSections = document.querySelectorAll('.help-section');
+
+            if (helpButton && helpModalOverlay) {
+                helpButton.addEventListener('click', () => {
+                    helpModalOverlay.classList.add('show');
+                });
+
+                if (helpClose) {
+                    helpClose.addEventListener('click', () => {
+                        helpModalOverlay.classList.remove('show');
+                    });
+                }
+
+                helpModalOverlay.addEventListener('click', (e) => {
+                    if (e.target === helpModalOverlay) {
+                        helpModalOverlay.classList.remove('show');
+                    }
+                });
+
+                helpTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const targetTab = tab.dataset.tab;
+
+                        // Remove active de todas as tabs e sections
+                        helpTabs.forEach(t => t.classList.remove('active'));
+                        helpSections.forEach(s => s.classList.remove('active'));
+
+                        // Adiciona active na tab e section selecionada
+                        tab.classList.add('active');
+                        const targetSection = document.getElementById(`help-${targetTab}`);
+                        if (targetSection) {
+                            targetSection.classList.add('active');
+                        }
+                    });
+                });
+            }
+
+            const initEventListeners = () => {
+                DOMElements.playButton.addEventListener('click', handlePlay);
+                DOMElements.modalButton.addEventListener('click', hideGanhosModalAndResume);
+                DOMElements.plusButton.addEventListener('click', () => {
+                    if (!state.isSpinning) {
+                        state.aposta += state.apostaStep;
+                        updateDisplay();
+                    }
+                });
+                DOMElements.minusButton.addEventListener('click', () => {
+                    if (!state.isSpinning && state.aposta > state.apostaStep) {
+                        state.aposta -= state.apostaStep;
+                        updateDisplay();
+                    }
+                });
+                DOMElements.normalButton.addEventListener('click', () => {
+                    if (!state.isSpinning) {
+                        state.isNormal = !state.isNormal;
+                        DOMElements.normalButton.innerHTML = state.isNormal ? '⚡ NORMAL' : '⚡ FLASH';
+                    }
+                });
+
+                // Botão de depósito
+                if (DOMElements.depositButton) {
+                    DOMElements.depositButton.addEventListener('click', () => {
+                        if (state.isLoggedIn) {
+                            // Se estiver logado, abre o modal de depósito
+                            if (typeof openDepositModal === 'function') {
+                                openDepositModal();
+                            } else {
+                                // Tenta abrir diretamente via DOM
+                                const depositModal = document.getElementById('depositModal');
+                                const backdrop = document.getElementById('backdrop2');
+                                if (depositModal && backdrop) {
+                                    depositModal.classList.add('active');
+                                    backdrop.classList.add('active');
+                                    document.body.style.overflow = 'hidden';
+                                }
+                            }
+                        } else {
+                            // Se não estiver logado, abre o modal de cadastro
+                            showAuthModal('register');
+                        }
+                    });
+                }
+
+                DOMElements.soundButton.addEventListener('click', () => {
+                    state.isMuted = !state.isMuted;
+
+                    // Controlar música de fundo
+                    if (backgroundMusic) {
+                        if (state.isMuted) {
+                            backgroundMusic.pause();
+                        } else {
+                            const playPromise = backgroundMusic.play();
+                            if (playPromise !== undefined) {
+                                playPromise.then(() => {
+                                    musicStarted = true;
+                                }).catch(error => {
+                                    console.log('Erro ao tocar música:', error);
+                                });
+                            }
+                        }
+                    }
+
+                    // Atualizar ícone do botão
+                    DOMElements.soundButton.innerHTML = state.isMuted ?
+                        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>` :
+                        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
+                });
+
+                DOMElements.profileButton.addEventListener('click', () => state.isLoggedIn ? DOMElements.profileModalOverlay.classList.add('show') : showAuthModal('login'));
+                DOMElements.closeProfileButton.addEventListener('click', () => DOMElements.profileModalOverlay.classList.remove('show'));
+                DOMElements.logoutButton.addEventListener('click', async () => {
+                    const formData = new FormData();
+                    formData.append('action', 'logout');
+                    const response = await fetch('', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if ((await response.json()).success) window.location.reload();
+                });
+
+                DOMElements.authModalOverlay.addEventListener('click', e => {
+                    if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('auth-modal-close')) {
+                        DOMElements.authModalOverlay.classList.remove('show');
+                    }
+                });
+
+                DOMElements.authModalOverlay.querySelectorAll('.auth-tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const targetTab = tab.dataset.tab;
+                        DOMElements.authModalOverlay.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        DOMElements.authModalOverlay.querySelectorAll('.auth-form-container').forEach(form => {
+                            form.classList.toggle('active', form.id === `${targetTab}-form-container`);
+                        });
+                    });
+                });
+
+                document.querySelectorAll('.password-toggle').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const input = btn.closest('.input-wrapper').querySelector('.form-input');
+                        const icon = btn.querySelector('i');
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            icon.classList.remove('bi-eye');
+                            icon.classList.add('bi-eye-slash');
+                        } else {
+                            input.type = 'password';
+                            icon.classList.remove('bi-eye-slash');
+                            icon.classList.add('bi-eye');
+                        }
+                    });
+                });
+
+                // Link "Entrar" no rodapé do formulário de cadastro
+                const switchToLoginLink = document.getElementById('switch-to-login');
+                if (switchToLoginLink) {
+                    switchToLoginLink.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const loginTab = DOMElements.authModalOverlay.querySelector('.auth-tab[data-tab="login"]');
+                        if (loginTab) {
+                            loginTab.click();
+                        }
+                    });
+                }
+
+                DOMElements.registerForm.addEventListener('submit', (e) => handleAuthFormSubmit(e, 'register'));
+                DOMElements.loginForm.addEventListener('submit', (e) => handleAuthFormSubmit(e, 'login'));
+
+                if (DOMElements.openWithdrawButton) {
+                    DOMElements.openWithdrawButton.addEventListener('click', () => {
+                        if (typeof openWithdrawModal === 'function') {
+                            DOMElements.profileModalOverlay.classList.remove('show');
+                            openWithdrawModal(state.saldo);
+                        } else {
+                            alert('Erro: Modal de saque não encontrado.');
+                        }
+                    });
+                }
+
+                if (DOMElements.openDepositButton) {
+                    DOMElements.openDepositButton.addEventListener('click', () => {
+                        if (typeof openDepositModal === 'function') {
+                            DOMElements.profileModalOverlay.classList.remove('show');
+                            openDepositModal();
+                        } else {
+                            alert('Erro: Modal de depósito não encontrado.');
+                        }
+                    });
+                }
+
+                if (DOMElements.openHistoryButton) DOMElements.openHistoryButton.addEventListener('click', openHistoryModal);
+                if (DOMElements.closeHistoryButton) DOMElements.closeHistoryButton.addEventListener('click', () => DOMElements.historyModalOverlay.classList.remove('show'));
+                if (DOMElements.historyModalOverlay) DOMElements.historyModalOverlay.addEventListener('click', e => {
+                    if (e.target === DOMElements.historyModalOverlay) DOMElements.historyModalOverlay.classList.remove('show');
+                });
+
+                if (DOMElements.openAffiliateButton) DOMElements.openAffiliateButton.addEventListener('click', openAffiliateModal);
+                if (DOMElements.closeAffiliateButton) DOMElements.closeAffiliateButton.addEventListener('click', () => DOMElements.affiliateModalOverlay.classList.remove('show'));
+                if (DOMElements.affiliateModalOverlay) DOMElements.affiliateModalOverlay.addEventListener('click', e => {
+                    if (e.target === DOMElements.affiliateModalOverlay) DOMElements.affiliateModalOverlay.classList.remove('show');
+                });
+
+                // Botão Ver Depósitos Trazidos (no painel de afiliado)
+                const verDepositosBtn = document.getElementById('ver-depositos-btn');
+                if (verDepositosBtn) {
+                    verDepositosBtn.addEventListener('click', () => {
+                        if (window.affiliateData && window.affiliateData.depositos_completos) {
+                            const totalRecebido = window.affiliateData.depositos_completos.reduce((sum, dep) => sum + (parseFloat(dep.ganho) || 0), 0);
+                            // O saldo disponível é igual ao total recebido
+                            const saldoDisponivel = totalRecebido;
+                            abrirModalDepositosCompletos(window.affiliateData.depositos_completos, totalRecebido, saldoDisponivel);
+                        } else {
+                            // Se não tiver dados, carregar
+                            openAffiliateHistoryModal();
+                        }
+                    });
+                }
+
+                // Função para abrir modal de histórico de afiliado
+                window.openAffiliateHistoryModal = async function() {
+                    if (DOMElements.profileModalOverlay) {
+                        DOMElements.profileModalOverlay.classList.remove('show');
+                    }
+
+                    const depositosCompletoModal = document.getElementById('depositos-completo-modal-overlay');
+                    if (!depositosCompletoModal) {
+                        console.error('Modal de histórico não encontrado');
+                        showNotification('Erro: Modal não encontrado', true);
+                        return;
+                    }
+
+                    depositosCompletoModal.classList.add('show');
+                    const lista = document.getElementById('depositos-completo-list');
+                    if (!lista) {
+                        console.error('Lista de depósitos não encontrada');
+                        return;
+                    }
+
+                    lista.innerHTML = '<p style="text-align: center; color: #aaa; padding: 20px;">Carregando...</p>';
+                    // Aguardar um pouco para garantir que lucide esteja carregado
+                    setTimeout(() => {
+                        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                            lucide.createIcons();
+                        }
+                    }, 100);
+
+                    try {
+                        const response = await fetch('ajax/get_affiliate_data.php');
+                        if (!response.ok) throw new Error('Erro na requisição');
+
+                        const data = await response.json();
+                        if (!data.success) throw new Error(data.message || 'Erro ao carregar dados');
+
+                        // Salvar dados globalmente
+                        window.affiliateData = data;
+
+                        // Calcular total recebido e saldo disponível
+                        const depositosCompletos = data.depositos_completos || [];
+                        const totalRecebido = depositosCompletos.reduce((sum, dep) => sum + (parseFloat(dep.ganho) || 0), 0);
+                        // O saldo disponível é igual ao total recebido
+                        const saldoDisponivel = totalRecebido;
+
+                        if (typeof abrirModalDepositosCompletos === 'function') {
+                            abrirModalDepositosCompletos(depositosCompletos, totalRecebido, saldoDisponivel);
+                        } else {
+                            console.error('Função abrirModalDepositosCompletos não encontrada');
+                        }
+                    } catch (error) {
+                        if (lista) {
+                            lista.innerHTML = '<p style="text-align: center; color: #000000; padding: 20px;">Erro ao carregar histórico: ' + error.message + '</p>';
+                        }
+                        console.error('Erro ao carregar histórico de afiliado:', error);
+                        showNotification('Erro ao carregar histórico de afiliado', true);
+                    }
+                };
+
+                // Função para abrir modal de depósitos completos
+                window.abrirModalDepositosCompletos = function(depositos, totalRecebido = null, saldoDisponivel = null) {
+                    const depositosCompletoModal = document.getElementById('depositos-completo-modal-overlay');
+                    if (!depositosCompletoModal) return;
+
+                    const lista = document.getElementById('depositos-completo-list');
+                    if (!lista) return;
+
+                    depositosCompletoModal.classList.add('show');
+
+                    // Calcular estatísticas
+                    const totalDepositos = depositos ? depositos.length : 0;
+                    let totalRecebidoCalculado = 0;
+                    if (depositos && depositos.length > 0) {
+                        totalRecebidoCalculado = depositos.reduce((sum, dep) => sum + (parseFloat(dep.ganho) || 0), 0);
+                    }
+
+                    // Atualizar estatísticas no modal
+                    const histTotalDepositos = document.getElementById('hist-total-depositos');
+                    const histTotalRecebido = document.getElementById('hist-total-recebido');
+                    const histSaldoDisponivel = document.getElementById('hist-saldo-disponivel');
+
+                    // Calcular o valor final a ser exibido
+                    const valorFinal = totalRecebido || totalRecebidoCalculado;
+
+                    if (histTotalDepositos) histTotalDepositos.textContent = totalDepositos;
+                    if (histTotalRecebido) histTotalRecebido.textContent = formatCurrency(valorFinal);
+                    if (histSaldoDisponivel) {
+                        // Saldo disponível é sempre igual ao total recebido
+                        histSaldoDisponivel.textContent = formatCurrency(valorFinal);
+                    }
+
+                    if (!depositos || depositos.length === 0) {
+                        lista.innerHTML = '<p style="text-align: center; color: #aaa; padding: 20px;">Nenhum depósito encontrado.</p>';
+                        return;
+                    }
+
+                    lista.innerHTML = '';
+                    depositos.forEach(dep => {
+                        const dataFormatada = new Date(dep.data).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+
+                        lista.innerHTML += `
+                        <div class="deposito-completo-item">
+                            <div class="header">
+                                <div class="indicado-info">
+                                    <div class="indicado-nome">${dep.nome_indicado || 'Usuário #' + dep.indicado_id}</div>
+                                    <div class="indicado-telefone">${dep.telefone_indicado || 'N/A'}</div>
+                                </div>
+                                <div class="data">${dataFormatada}</div>
+                            </div>
+                            <div class="valores">
+                                <div class="valor-item">
+                                    <div class="valor-label">Valor Depositado</div>
+                                    <div class="valor-deposito">${formatCurrency(dep.valor)}</div>
+                                </div>
+                                <div class="valor-item">
+                                    <div class="valor-label">Seu Ganho</div>
+                                    <div class="valor-ganho">${formatCurrency(dep.ganho || 0)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    });
+
+                    // Tentar criar ícones se lucide estiver disponível
+                    if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+                        try {
+                            lucide.createIcons();
+                        } catch (e) {
+                            console.warn('Erro ao criar ícones lucide:', e);
+                        }
+                    }
+                };
+
+                // Botão Histórico de Afiliado (no menu do perfil)
+                if (DOMElements.openAffiliateHistoryButton) {
+                    DOMElements.openAffiliateHistoryButton.addEventListener('click', () => {
+                        if (typeof window.openAffiliateHistoryModal === 'function') {
+                            window.openAffiliateHistoryModal();
+                        } else {
+                            console.error('Função openAffiliateHistoryModal não encontrada');
+                        }
+                    });
+                }
+
+                // Event listeners para fechar modal de histórico
+                const depositosCompletoModal = document.getElementById('depositos-completo-modal-overlay');
+                const closeDepositosCompletoBtn = document.getElementById('close-depositos-completo-button');
+
+                if (closeDepositosCompletoBtn) {
+                    closeDepositosCompletoBtn.addEventListener('click', () => {
+                        if (depositosCompletoModal) depositosCompletoModal.classList.remove('show');
+                    });
+                }
+
+                if (depositosCompletoModal) {
+                    depositosCompletoModal.addEventListener('click', e => {
+                        if (e.target === depositosCompletoModal) depositosCompletoModal.classList.remove('show');
+                    });
+                }
+
+                if (DOMElements.copyLinkBtn) {
+                    DOMElements.copyLinkBtn.addEventListener('click', () => {
+                        navigator.clipboard.writeText(DOMElements.affiliateLinkInput.value)
+                            .then(() => showNotification('Link copiado!'))
+                            .catch(() => showNotification('Falha ao copiar o link.', true));
+                    });
+                }
+
+                if (DOMElements.openAdminButton) {
+                    DOMElements.openAdminButton.addEventListener('click', () => {
+                        window.location.href = '/admin';
+                    });
+                }
+            };
+
+            // Sistema de Notificações de Saque em Tempo Real
+            const withdrawNames = [
+                'João Silva', 'Maria Santos', 'Pedro Oliveira', 'Ana Costa', 'Carlos Souza',
+                'Juliana Ferreira', 'Rafael Almeida', 'Fernanda Lima', 'Bruno Rodrigues', 'Camila Araújo',
+                'Lucas Martins', 'Beatriz Ribeiro', 'Gabriel Pereira', 'Isabela Carvalho', 'Matheus Gomes',
+                'Larissa Dias', 'Felipe Rocha', 'Mariana Barbosa', 'Thiago Nunes', 'Amanda Monteiro',
+                'Gustavo Cardoso', 'Jéssica Teixeira', 'Rodrigo Moreira', 'Patrícia Freitas', 'Diego Castro',
+                'Vanessa Mendes', 'André Ramos', 'Tatiana Duarte', 'Ricardo Azevedo', 'Priscila Correia',
+                'Marcos Pinto', 'Renata Moura', 'Leandro Machado', 'Daniela Rezende', 'Vinícius Farias',
+                'Bianca Campos', 'Eduardo Nascimento', 'Natália Lopes', 'Henrique Viana', 'Letícia Barros',
+                'Paulo Guimarães', 'Sabrina Melo', 'Igor Cavalcanti', 'Raquel Pires', 'Fábio Xavier',
+                'Cristina Tavares', 'Leonardo Sampaio', 'Adriana Bento', 'Renan Peixoto', 'Viviane Coelho'
+            ];
+
+            const generateWithdrawAmount = () => {
+                const amounts = [50, 75, 100, 150, 200, 250, 300, 350, 400, 500, 600, 750, 800, 1000, 1200, 1500, 2000, 2500, 3000, 5000];
+                return amounts[Math.floor(Math.random() * amounts.length)];
+            };
+
+            const showWithdrawNotification = () => {
+                const container = document.getElementById('withdraw-notifications-container');
+                if (!container) return;
+
+                const name = withdrawNames[Math.floor(Math.random() * withdrawNames.length)];
+                const amount = generateWithdrawAmount();
+                const formattedAmount = new Intl.NumberFormat('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                }).format(amount);
+
+                // Varia entre "ganhou" e "sacou"
+                const actions = ['ganhou', 'sacou'];
+                const action = actions[Math.floor(Math.random() * actions.length)];
+                const headerText = action === 'ganhou' ? 'Ganho Realizado' : 'Saque Realizado';
+
+                const notification = document.createElement('div');
+                notification.className = 'withdraw-notification';
+                notification.innerHTML = `
+                <div class="withdraw-notification-header">
+                    <div class="withdraw-notification-icon">💰</div>
+                    <span>${headerText}</span>
+                </div>
+                <div class="withdraw-notification-content">
+                    <span class="withdraw-notification-name">${name}</span> ${action}
+                    <span class="withdraw-notification-amount">${formattedAmount}</span>
+                </div>
+            `;
+
+                container.appendChild(notification);
+
+                // Remove a notificação após 5 segundos
+                setTimeout(() => {
+                    notification.classList.add('hide');
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 500);
+                }, 5000);
+            };
+
+            // Inicia as notificações após um delay inicial
+            let withdrawNotificationInterval;
+            const startWithdrawNotifications = () => {
+                // Primeira notificação após 3 segundos
+                setTimeout(() => {
+                    showWithdrawNotification();
+
+                    // Depois mostra uma notificação a cada 5-12 segundos
+                    withdrawNotificationInterval = setInterval(() => {
+                        showWithdrawNotification();
+                    }, 5000 + Math.random() * 7000); // Entre 5 e 12 segundos
+                }, 3000);
+            };
+
+            const init = () => {
+                updateDisplay();
+                initEventListeners();
+                createLabels('roleta1-labels', state.roleta1Map.length, 35);
+                createLabels('roleta2-labels', state.roleta2Map.length, 30);
+
+                // Garantir que a roleta esteja na posição correta após as imagens carregarem
+                // Isso garante o posicionamento inicial sem interferir na animação swaying
+                const ensureRouletteInitialPosition = () => {
+                    if (DOMElements.roleta1 && DOMElements.roleta1Labels && DOMElements.roleta2 && DOMElements.roleta2Labels) {
+                        // Garantir que os elementos estejam posicionados corretamente
+                        // A animação swaying será aplicada pela classe CSS
+                        // Apenas verificamos que os elementos existem e estão corretos
+                        void DOMElements.roleta1.offsetWidth;
+                        void DOMElements.roleta2.offsetWidth;
+                    }
+                };
+
+                // Aguardar carregamento das imagens para garantir layout correto
+                const roleta1Img = document.getElementById('roulette-wheel');
+                const roleta2Img = document.getElementById('bonus-wheel');
+
+                if (roleta1Img && roleta2Img) {
+                    const imagesLoaded = () => {
+                        // Aguardar frame para garantir que o layout foi atualizado
+                        requestAnimationFrame(() => {
+                            ensureRouletteInitialPosition();
+                        });
+                    };
+
+                    if (roleta1Img.complete && roleta2Img.complete) {
+                        // Imagens já carregadas
+                        ensureRouletteInitialPosition();
+                    } else {
+                        let loadedCount = 0;
+                        const checkAllLoaded = () => {
+                            loadedCount++;
+                            if (loadedCount === 2) {
+                                imagesLoaded();
+                            }
+                        };
+                        roleta1Img.addEventListener('load', checkAllLoaded);
+                        roleta2Img.addEventListener('load', checkAllLoaded);
+                        // Fallback caso as imagens já estejam carregadas mas o evento não disparou
+                        setTimeout(() => {
+                            if (roleta1Img.complete && roleta2Img.complete && loadedCount < 2) {
+                                imagesLoaded();
+                            }
+                        }, 200);
+                    }
+                }
+
+                if (!state.isLoggedIn) {
+                    DOMElements.plusButton.disabled = true;
+                    DOMElements.minusButton.disabled = true;
+                }
+
+                // Inicia as notificações de saque
+                startWithdrawNotifications();
+
+                // Abre automaticamente o modal de cadastro se o usuário não estiver logado
+                if (!state.isLoggedIn) {
+                    // Pequeno delay para garantir que tudo foi carregado
+                    setTimeout(() => {
+                        showAuthModal('register');
+                    }, 300);
+                }
+
+                // Se veio com parâmetro register=1, também abre o modal de cadastro (compatibilidade)
+                const urlParams = new URLSearchParams(window.location.search);
+                const shouldOpenRegister = urlParams.get('register') === '1';
+                if (shouldOpenRegister && !state.isLoggedIn) {
+                    showAuthModal('register');
+                }
+
+                // Se veio com parâmetro depositar=1, abre o modal de depósito
+                const shouldOpenDeposit = urlParams.get('depositar') === '1';
+                if (shouldOpenDeposit && state.isLoggedIn) {
+                    // Aguarda um pouco para garantir que os modais foram carregados
+                    setTimeout(() => {
+                        if (typeof openDepositModal === 'function') {
+                            openDepositModal();
+                        } else {
+                            // Tenta abrir diretamente via DOM
+                            const depositModal = document.getElementById('depositModal');
+                            const backdrop = document.getElementById('backdrop2');
+                            if (depositModal && backdrop) {
+                                depositModal.classList.add('active');
+                                backdrop.classList.add('active');
+                                document.body.style.overflow = 'hidden';
+                            }
+                        }
+                    }, 500);
+                }
+
+                // Verifica se o usuário acabou de se registrar e abre o modal de depósito
+                const justRegistered = sessionStorage.getItem('justRegistered');
+                // Se já processamos o shouldOpenDeposit acima, não processar novamente
+                if (state.isLoggedIn && justRegistered === 'true' && !shouldOpenDeposit) {
+                    console.log('Usuário acabou de se registrar, abrindo modal de depósito...', {
+                        justRegistered,
+                        shouldOpenDeposit,
+                        isLoggedIn: state.isLoggedIn
+                    });
+                    sessionStorage.removeItem('justRegistered');
+                    // Função para abrir o modal de depósito diretamente
+                    const openDepositDirectly = () => {
+                        const depositModal = document.getElementById('depositModal');
+                        const backdrop = document.getElementById('backdrop2');
+                        if (depositModal && backdrop) {
+                            depositModal.offsetHeight; // Force reflow
+                            requestAnimationFrame(() => {
+                                depositModal.classList.add('active');
+                                backdrop.classList.add('active');
+                                document.body.style.overflow = 'hidden';
+                            });
+                            return true;
+                        }
+                        return false;
+                    };
+
+                    // Aguarda a função openDepositModal estar disponível ou tenta abrir diretamente
+                    let attempts = 0;
+                    const maxAttempts = 50; // Máximo de 5 segundos (50 * 100ms)
+                    const checkAndOpenDeposit = () => {
+                        attempts++;
+                        // Tenta usar a função se estiver disponível
+                        if (typeof window.openDepositModal === 'function') {
+                            console.log('Abrindo modal de depósito via função openDepositModal');
+                            window.openDepositModal();
+                        }
+                        // Se não, tenta abrir diretamente via DOM
+                        else if (openDepositDirectly()) {
+                            console.log('Modal de depósito aberto diretamente via DOM');
+                            // Modal aberto com sucesso
+                        }
+                        // Se ainda não funcionou, tenta novamente
+                        else if (attempts < maxAttempts) {
+                            if (attempts % 10 === 0) {
+                                console.log(`Tentativa ${attempts} de abrir modal de depósito...`);
+                            }
+                            setTimeout(checkAndOpenDeposit, 100);
+                        } else {
+                            console.warn('Não foi possível abrir o modal de depósito após várias tentativas');
+                            console.log('Elementos encontrados:', {
+                                depositModal: !!document.getElementById('depositModal'),
+                                backdrop: !!document.getElementById('backdrop2'),
+                                openDepositModal: typeof window.openDepositModal
+                            });
+                        }
+                    };
+                    // Aguarda um pouco para garantir que os modais foram carregados
+                    setTimeout(checkAndOpenDeposit, 500);
+                }
+
+                const updateUserStatus = () => {
+                    fetch('visitas/visitasapi.php?action=update_status').catch(err => console.error('Erro ao atualizar status.', err));
+                };
+                updateUserStatus();
+                setInterval(updateUserStatus, 30000);
+
+            };
+
+            init();
+        });
+    </script>
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"version":"2024.11.0","token":"bfd1a2a9c29c4fdd8dd94427f5d15de1","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}'
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
