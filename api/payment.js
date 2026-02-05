@@ -107,11 +107,21 @@ module.exports = async (req, res) => {
   if (customerId) {
     payload.customerId = customerId;
   } else {
+    const rawCpf = input.cpf || input.taxId || '731.607.790-50';
+    const cpfDigits = String(rawCpf).replace(/\D/g, '');
+    const safeCpf = cpfDigits.length === 11 ? cpfDigits : '73160779050';
+
+    const rawPhone = input.telefone || input.phone || '11999999999';
+    const phoneDigits = String(rawPhone).replace(/\D/g, '');
+    const safePhone = phoneDigits.length >= 10 ? phoneDigits : '11999999999';
+
+    const safeEmail = input.email || `cliente+${Date.now()}@exemplo.com`;
+
     payload.customer = {
       name: input.nome || input.name || input.nome_completo || 'Cliente',
-      cellphone: input.telefone || input.phone || '(11) 99999-9999',
-      email: input.email || 'cliente@exemplo.com',
-      taxId: input.cpf || input.taxId || '123.456.789-01',
+      cellphone: safePhone,
+      email: safeEmail,
+      taxId: safeCpf,
     };
   }
 
