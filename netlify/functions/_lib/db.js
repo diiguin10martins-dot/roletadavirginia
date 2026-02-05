@@ -27,6 +27,15 @@ function getPool() {
     throw new Error('Missing DB_DSN');
   }
 
+  const caFromEnv = process.env.DB_CA_CERT || '';
+  const caFromBase64 = process.env.DB_CA_CERT_BASE64 || '';
+  let ssl;
+  if (caFromBase64) {
+    ssl = { ca: Buffer.from(caFromBase64, 'base64').toString('utf8'), rejectUnauthorized: true };
+  } else if (caFromEnv) {
+    ssl = { ca: caFromEnv.replace(/\\n/g, '\n'), rejectUnauthorized: true };
+  }
+
   let config;
   if (/^mysql:\/\//i.test(dsn)) {
     config = { uri: dsn };
@@ -42,6 +51,10 @@ function getPool() {
     };
   } else {
     throw new Error('Unsupported DB_DSN format. Use mysql:... or mysql://...');
+  }
+
+  if (ssl) {
+    config.ssl = ssl;
   }
 
   pool = mysql.createPool({
