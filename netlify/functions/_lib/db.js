@@ -34,6 +34,9 @@ function getPool() {
     ssl = { ca: Buffer.from(caFromBase64, 'base64').toString('utf8'), rejectUnauthorized: true };
   } else if (caFromEnv) {
     ssl = { ca: caFromEnv.replace(/\\n/g, '\n'), rejectUnauthorized: true };
+  } else {
+    // Last resort (dev only): allow self-signed certs
+    ssl = { rejectUnauthorized: false };
   }
 
   let config;
