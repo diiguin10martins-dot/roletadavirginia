@@ -20,28 +20,14 @@ exports.handler = async (event) => {
   }
 
   const secret = process.env.ABACATEPAY_WEBHOOK_SECRET;
-  const publicKey = process.env.ABACATEPAY_PUBLIC_KEY;
   const receivedSecret = (event.queryStringParameters || {}).webhookSecret || '';
-  const signature =
-    event.headers['x-webhook-signature'] ||
-    event.headers['X-Webhook-Signature'] ||
-    '';
 
-  if (!secret || !publicKey) {
+  if (!secret) {
     return { statusCode: 500, body: JSON.stringify({ error: 'Missing webhook secrets' }) };
   }
 
   if (receivedSecret !== secret) {
     return { statusCode: 401, body: JSON.stringify({ error: 'Invalid webhook secret' }) };
-  }
-
-  const expectedSig = crypto
-    .createHmac('sha256', publicKey)
-    .update(rawBody)
-    .digest('base64');
-
-  if (!signature || !crypto.timingSafeEqual(Buffer.from(expectedSig), Buffer.from(signature))) {
-    return { statusCode: 401, body: JSON.stringify({ error: 'Invalid signature' }) };
   }
 
   let payload;
