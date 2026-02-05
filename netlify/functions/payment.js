@@ -1,4 +1,4 @@
-const { getPool } = require('./_lib/db');
+const { getPool, ensureSchema } = require('./_lib/db');
 
 function parseAmountToCents(value) {
   if (value === undefined || value === null || value === '') return null;
@@ -139,6 +139,7 @@ exports.handler = async (event) => {
 
   try {
     const pool = getPool();
+    await ensureSchema();
     await pool.execute(
       `INSERT INTO deposits
        (transaction_id, external_id, amount_cents, status, payment_url, provider, created_at, updated_at)

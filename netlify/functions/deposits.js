@@ -1,4 +1,4 @@
-const { getPool } = require('./_lib/db');
+const { getPool, ensureSchema } = require('./_lib/db');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'GET') {
@@ -12,6 +12,7 @@ exports.handler = async (event) => {
 
   try {
     const pool = getPool();
+    await ensureSchema();
 
     if (transactionId || externalId) {
       const [rows] = await pool.execute(

@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { getPool } = require('./_lib/db');
+const { getPool, ensureSchema } = require('./_lib/db');
 
 function decodeBody(event) {
   if (!event.body) return '';
@@ -57,6 +57,7 @@ exports.handler = async (event) => {
 
   try {
     const pool = getPool();
+    await ensureSchema();
 
     if (eventId) {
       await pool.execute(
