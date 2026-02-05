@@ -23,14 +23,14 @@ function parseMysqlDsn(dsn) {
 function getPool() {
   if (pool) return pool;
 
-  const dsn = process.env.DB_DSN || '';
+  const dsn = (process.env.DB_DSN || '').trim();
   if (!dsn) {
     throw new Error('Missing DB_DSN');
   }
 
   const caFromEnv = process.env.DB_CA_CERT || '';
   const caFromBase64 = process.env.DB_CA_CERT_BASE64 || '';
-  const forceInsecure = String(process.env.DB_SSL_INSECURE || '').toLowerCase() === 'true';
+  const forceInsecure = String(process.env.DB_SSL_INSECURE || '').trim().toLowerCase() === 'true';
   let ssl;
   if (forceInsecure) {
     ssl = { rejectUnauthorized: false };
@@ -52,8 +52,8 @@ function getPool() {
       port: parsed.port,
       database: parsed.database,
       charset: parsed.charset,
-      user: process.env.DB_USER || '',
-      password: process.env.DB_PASS || '',
+      user: (process.env.DB_USER || '').trim(),
+      password: (process.env.DB_PASS || '').trim(),
     };
   } else {
     throw new Error('Unsupported DB_DSN format. Use mysql:... or mysql://...');

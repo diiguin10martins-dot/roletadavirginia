@@ -73,14 +73,14 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const token = process.env.ABACATEPAY_TOKEN;
+  const token = (process.env.ABACATEPAY_TOKEN || '').trim();
   if (!token) {
     res.status(500).json({ error: 'Missing ABACATEPAY_TOKEN' });
     return;
   }
 
-  const returnUrl = input.returnUrl || process.env.APP_RETURN_URL || buildReturnUrl(req, '');
-  const completionUrl = input.completionUrl || process.env.APP_COMPLETION_URL || buildReturnUrl(req, '');
+  const returnUrl = input.returnUrl || (process.env.APP_RETURN_URL || '').trim() || buildReturnUrl(req, '');
+  const completionUrl = input.completionUrl || (process.env.APP_COMPLETION_URL || '').trim() || buildReturnUrl(req, '');
 
   const externalId = `dep_${Date.now()}_${Math.floor(Math.random() * 9000 + 1000)}`;
 

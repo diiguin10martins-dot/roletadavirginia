@@ -23,7 +23,7 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const secret = process.env.ABACATEPAY_WEBHOOK_SECRET;
+  const secret = (process.env.ABACATEPAY_WEBHOOK_SECRET || '').trim();
   const receivedSecret = (req.query && req.query.webhookSecret) || '';
 
   if (!secret) {
