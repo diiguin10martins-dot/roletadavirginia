@@ -29,8 +29,7 @@ module.exports = async (req, res) => {
       `SELECT transaction_id, external_id, amount_cents, status, payment_url, provider, created_at, updated_at
        FROM deposits
        ORDER BY id DESC
-       LIMIT ?`,
-      [safeLimit]
+       LIMIT ${safeLimit}`
     );
     res.status(200).json({ success: true, data: rows });
   } catch (err) {
