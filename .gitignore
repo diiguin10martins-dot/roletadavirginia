@@ -2,3 +2,4 @@
 .netlify
 netlify-site.json
 node_modules
+.vercel
