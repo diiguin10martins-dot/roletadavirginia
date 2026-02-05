@@ -2563,7 +2563,7 @@
                 const formData = new FormData(form);
                 formData.append('tipo_deposito', 'normal');
                 try {
-                    const res = await fetch('/api/payment.php', {
+                    const res = await fetch('/.netlify/functions/payment', {
                         method: 'POST',
                         body: formData
                     });
