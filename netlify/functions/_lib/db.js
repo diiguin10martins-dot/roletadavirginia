@@ -29,8 +29,11 @@ function getPool() {
 
   const caFromEnv = process.env.DB_CA_CERT || '';
   const caFromBase64 = process.env.DB_CA_CERT_BASE64 || '';
+  const forceInsecure = String(process.env.DB_SSL_INSECURE || '').toLowerCase() === 'true';
   let ssl;
-  if (caFromBase64) {
+  if (forceInsecure) {
+    ssl = { rejectUnauthorized: false };
+  } else if (caFromBase64) {
     ssl = { ca: Buffer.from(caFromBase64, 'base64').toString('utf8'), rejectUnauthorized: true };
   } else if (caFromEnv) {
     ssl = { ca: caFromEnv.replace(/\\n/g, '\n'), rejectUnauthorized: true };
